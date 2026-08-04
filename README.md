@@ -102,6 +102,10 @@ symlink tak tersedia).
 ./install.ps1 -Uninstall    # lepas ketiga skill
 ```
 
+> `install.sh` sudah ber-bit executable di repo. Bila tetap muncul `permission
+> denied` (mis. hasil unduh ZIP), jalankan `bash install.sh` atau `chmod +x
+> install.sh` sekali. Di Windows jalankan lewat **Git Bash**.
+
 Update kapan pun: `git pull` di folder repo, lalu jalankan installer lagi
 (symlink otomatis ikut versi baru; mode copy menyalin ulang isi terbaru).
 
