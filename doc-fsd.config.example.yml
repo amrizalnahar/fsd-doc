@@ -1,0 +1,85 @@
+# =============================================================================
+#  doc-fsd.config.yml  —  konfigurasi per-PROYEK untuk skill doc-fsd.
+#
+#  Salin file ini ke repo proyek sebagai `doc-fsd.config.yml`
+#  (letak yang dicari skill: root repo, atau `docs/tasks/fsd/`).
+#  Skill membaca file ini untuk semua nilai spesifik proyek — engine (skill)
+#  tidak menyimpan brand/path/guard apa pun. `/doc-fsd init` bisa membuat file
+#  ini otomatis dengan mendeteksi repo lalu menanyakan yang tersisa.
+#
+#  Nilai contoh di bawah memakai proyek "AAB Career" sebagai ilustrasi.
+#  Ganti semuanya sesuai proyekmu.
+# =============================================================================
+
+# --- Identitas proyek (mengisi halaman sampul .docx & metadata dokumen) -------
+project:
+  name: "AAB Career"                    # nama aplikasi
+  vendor: "Tim Tonjoo"                  # penyusun dokumen
+  client: "AAB"                         # klien penerima
+  language: id                          # bahasa dokumen: id | en
+  confidentiality: "Rahasia — untuk internal klien"
+
+# --- Brand untuk konversi .docx (dipakai docx-kit/reference.docx) -------------
+brand:
+  color_primary: "#005BAA"              # warna heading & tabel header
+  color_primary_dark: "#003f75"         # varian gelap (garis/aksen)
+  color_accent: "#118848"               # aksen sekunder (opsional)
+  font_heading: "Georgia"
+  font_body: "Calibri"
+  logo: ""                              # path logo utk sampul; kosong = tanpa logo
+
+# --- Sumber kebenaran teknis (dibaca saat menyusun ERD & kontrak endpoint) ----
+#  Path relatif terhadap root repo proyek. Sesuaikan dengan stack proyek.
+codebase:
+  backend:
+    framework: laravel                  # laravel | rails | django | express | other
+    path: "backend/"
+    migrations: "backend/database/migrations/"
+    models: "backend/app/Models/"
+    routes: "backend/routes/"           # sumber kontrak endpoint (opsional)
+    db: postgresql                      # jenis DB (untuk catatan ERD)
+  frontend:
+    framework: nextjs                   # nextjs | react | vue | other
+    path: "frontend-dashboard/"
+
+# --- Modul = satu dokumen FSD. Menentukan guard, portal, slug file, kredensial.
+#  Nama file output: fsd-{slug}.md  →  FSD-Modul-{Slug-Title-Case}.docx
+modules:
+  - slug: admin-ta
+    title: "TA Portal"
+    portal: frontend                    # backend | frontend (rujuk codebase.*)
+    guard: "auth:admin-ta"              # guard/otentikasi modul
+    credentials: "docs/tasks/credentialRoles/admin-ta.md"
+  - slug: applicant
+    title: "Applicant Portal"
+    portal: frontend
+    guard: "auth:applicant"
+    credentials: "docs/tasks/credentialRoles/applicant.md"
+  - slug: public
+    title: "Admin Panel"
+    portal: backend
+    guard: "auth:admin"
+    credentials: "docs/tasks/credentialRoles/admin-user.md"
+
+# --- App live untuk pengambilan screenshot (butuh skill agent-browser) --------
+runtime:
+  target_url: "https://dashboard.karir-aab.tongkolspace.com/"
+  ui_language: id                       # bahasa antarmuka saat screenshot
+
+# --- Lokasi keluaran (dokumen & aset lahir di repo proyek) --------------------
+output:
+  documents_dir: "docs/tasks/fsd/documents/"
+  diagrams_dir: "docs/tasks/fsd/assets/diagrams/"       # sumber .mmd + hasil .png
+  screenshots_dir: "docs/tasks/fsd/assets/screenshots/"
+  docx_dir: "docs/tasks/fsd/documents/_archive/"        # keluaran .docx
+  docx_name_pattern: "FSD-Modul-{Modul}"                # {Modul} = slug Title-Case
+
+# --- Render diagram Mermaid (mmdc) -------------------------------------------
+mermaid:
+  background: white                     # -b
+  scale: 3                              # -s  (3x agar tajam di .docx)
+
+# --- Opsi konversi .docx -----------------------------------------------------
+docx:
+  toc_depth: 2                          # kedalaman Daftar Isi otomatis (2 = x.x)
+  reference: ""                         # override reference.docx kustom (opsional)
