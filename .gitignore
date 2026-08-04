@@ -1,0 +1,3 @@
+# Python build cache (dari docx-kit/make-reference-docx.py)
+__pycache__/
+*.pyc

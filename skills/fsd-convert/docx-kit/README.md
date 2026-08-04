@@ -10,7 +10,7 @@ Prinsip kunci: Markdown adalah sumber **isi**; tampilan `.docx` ditentukan oleh
 semua FSD tampil konsisten. Warna/font/label `reference.docx` diambil dari
 `brand.*` + `project.*` pada **doc-fsd.config.yml** proyek.
 
-Biasanya kamu tidak memanggil kit ini langsung — jalankan `/doc-fsd build <modul>`.
+Biasanya kamu tidak memanggil kit ini langsung — jalankan `/fsd-convert <modul>`.
 Bagian di bawah untuk pemakaian manual / penyesuaian.
 
 ---

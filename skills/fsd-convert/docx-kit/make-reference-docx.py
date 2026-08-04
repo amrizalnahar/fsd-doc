@@ -45,8 +45,10 @@ def _find_config():
         return env
     d = os.getcwd()
     while True:
-        for cand in (os.path.join(d, "doc-fsd.config.yml"),
-                     os.path.join(d, "docs", "tasks", "fsd", "doc-fsd.config.yml")):
+        # lokasi baku: docs/tasks/fsd/ (di dalam workspace FSD, bukan root repo);
+        # root repo tetap dicek sebagai fallback config lama.
+        for cand in (os.path.join(d, "docs", "tasks", "fsd", "doc-fsd.config.yml"),
+                     os.path.join(d, "doc-fsd.config.yml")):
             if os.path.isfile(cand):
                 return cand
         parent = os.path.dirname(d)

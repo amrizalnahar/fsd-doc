@@ -1,10 +1,11 @@
 # =============================================================================
 #  doc-fsd.config.yml  —  konfigurasi per-PROYEK untuk skill doc-fsd.
 #
-#  Salin file ini ke repo proyek sebagai `doc-fsd.config.yml`
-#  (letak yang dicari skill: root repo, atau `docs/tasks/fsd/`).
+#  Salin file ini ke workspace FSD proyek sebagai
+#  `docs/tasks/fsd/doc-fsd.config.yml` (lokasi baku — JANGAN di root repo klien
+#  agar tidak mengotori repo utama; root masih dibaca sebagai fallback config lama).
 #  Skill membaca file ini untuk semua nilai spesifik proyek — engine (skill)
-#  tidak menyimpan brand/path/guard apa pun. `/doc-fsd init` bisa membuat file
+#  tidak menyimpan brand/path/guard apa pun. `/fsd-init` bisa membuat file
 #  ini otomatis dengan mendeteksi repo lalu menanyakan yang tersisa.
 #
 #  Nilai contoh di bawah memakai proyek "AAB Career" sebagai ilustrasi.
@@ -44,6 +45,9 @@ codebase:
 
 # --- Modul = satu dokumen FSD. Menentukan guard, portal, slug file, kredensial.
 #  Nama file output: fsd-{slug}.md  →  FSD-Modul-{Slug-Title-Case}.docx
+#  `credentials` = PATH ke file kredensial peran (BUKAN secrets-nya). Isinya
+#  ditanyakan /fsd-doc saat screenshot; folder docs/tasks/credentialRoles/ WAJIB
+#  di-gitignore agar password tidak ter-commit.
 modules:
   - slug: admin-ta
     title: "TA Portal"
@@ -61,7 +65,7 @@ modules:
     guard: "auth:admin"
     credentials: "docs/tasks/credentialRoles/admin-user.md"
 
-# --- App live untuk pengambilan screenshot (butuh skill agent-browser) --------
+# --- App live untuk screenshot (butuh agent-browser: agent-browser.dev/snapshots)
 runtime:
   target_url: "https://dashboard.karir-aab.tongkolspace.com/"
   ui_language: id                       # bahasa antarmuka saat screenshot
