@@ -53,6 +53,15 @@ confidentiality: "{{project.confidentiality}}"
      verifikasi fungsional bersama klien/UAT), BUKAN bagaimana sistem dibangun
      secara teknis. Detail teknis hanya di sub-bab Lampiran Teknis tiap bab.
 
+  5b. ATURAN #1 - DOKUMENTASIKAN REALITA, BUKAN ASUMSI. Dokumen ini menggambarkan
+     fungsi yang SUDAH berjalan. Baca kode dulu; tiap klaim (fungsi/aturan/field/
+     pesan/langkah) diberi komentar HTML sumber berisi  Source: file.ext:baris
+     tepat di dekatnya. Tak ada sumber -> JANGAN ditulis (tandai
+     "TIDAK TERVERIFIKASI" dan tanya developer). Jangan menulis perilaku yang
+     direncanakan/belum jadi. Komentar Source hidup di master .md (untuk audit)
+     dan otomatis hilang saat konversi .docx (Pandoc membuang komentar HTML).
+     Rekap sumber tiap ID dikumpulkan di sub-bab .10.3 (Matriks Keterlacakan).
+
   6. Sub-bab "Lampiran Teknis" pada SETIAP bab menu (mis. 2.10, 3.10, dst.)
      memuat ERD dan kontrak endpoint, dan IKUT diserahkan ke klien — tidak
      dipangkas.
@@ -97,7 +106,7 @@ confidentiality: "{{project.confidentiality}}"
                                       rata tengah).
         - build-docx.ps1           → satu perintah konversi (butuh Pandoc).
         - README.md                → panduan lengkap + cara ganti warna/logo.
-      Cara termudah: jalankan mode  /doc-fsd build {modul}  (memakai docx-kit
+      Cara termudah: jalankan mode  /fsd-convert {modul}  (memakai docx-kit
       paket skill + nilai brand dari config). Setara perintah manual:
           docx-kit/build-docx.ps1 {output.documents_dir}/fsd-{modul}.md
       Nama file .docx keluaran berpola FSD-Modul-{Modul}: {Modul} diambil dari
@@ -118,6 +127,8 @@ confidentiality: "{{project.confidentiality}}"
         c. Hapus baris judul "# Master Functional..." + header bold ganda; sampul
            sudah datang dari metadata.
         d. Pastikan semua diagram sudah berupa PNG (poin 9), bukan .mmd.
+        e. Hapus blok INTERNAL yang diapit INTERNAL:START ... INTERNAL:END (mis.
+           sub-bab .10.3 Matriks Keterlacakan) - audit tim, bukan untuk klien.
 
   11. Agar render Word tetap rapi (berlaku saat menulis body):
         - Jangan bikin tabel terlalu lebar/kolom terlalu banyak — Word sulit
@@ -276,7 +287,7 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 | IV | {{Saved Job}} (contoh — ganti) | {{SJ}} | {{/tersimpan}} | {{Belum}} |
 | … | {{…}} | {{…}} | {{…}} | {{…}} |
 
-**Keterangan status:** *Belum* = belum digarap · *Draf* = sedang diisi · *Selesai* = lengkap & terverifikasi.
+**Keterangan status:** *Belum* = belum digarap · *Draf* = sedang diisi / masih ada klaim tanpa sumber · *Selesai* = lengkap & SETIAP klaim tertaut sumber (lihat Matriks Keterlacakan .10.3) atau ditandai *TIDAK TERVERIFIKASI*.
 
 ---
 ---
@@ -289,7 +300,8 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
       • Ganti {{Nama Menu}} dan {{PREFIX}} (mis. MA).
       • Isi semua {{PLACEHOLDER}}, hapus baris "(contoh — ganti)".
   - Tiap bab bersifat MANDIRI: bisa dibaca & diverifikasi berdiri sendiri.
-  - Sub-bab .10 (Lampiran, Internal) DIPANGKAS pada salinan untuk klien.
+  - Sub-bab .10.1 (ERD) & .10.2 (Endpoint) IKUT ke klien; hanya .10.3 (Matriks
+    Keterlacakan) yang ditandai INTERNAL:START/END dan DIPANGKAS pada .docx klien.
 ============================================================================
 -->
 
@@ -335,9 +347,12 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 
 ## 2.2 Daftar Fungsi
 
-<!-- panduan: satu baris per fungsi yang benar-benar ada. Urutkan mengikuti alur
-     pemakaian (lihat → cari → saring → tambah → ubah → hapus → proses lanjutan →
-     notifikasi/audit). Selaraskan ID dengan sub-bab 2.4, 2.6, 2.7. -->
+<!-- panduan: satu baris per fungsi yang BENAR-BENAR ADA (terbukti di kode).
+     Urutkan mengikuti alur pemakaian (lihat → cari → saring → tambah → ubah →
+     hapus → proses lanjutan → notifikasi/audit). Selaraskan ID dengan sub-bab
+     2.4, 2.6, 2.7. Beri komentar HTML sumber (berisi "Source: file.ext:baris")
+     tepat di bawah tiap baris fungsi. Fungsi tanpa sumber JANGAN dicantumkan —
+     tandai "TIDAK TERVERIFIKASI" dan angkat ke developer. -->
 
 | ID | Nama Fungsi | Keterangan |
 |---|---|---|
@@ -391,9 +406,12 @@ Notasi: **W** = wajib diisi, **O** = opsional.
 
 ## 2.4 Aturan Bisnis
 
-<!-- panduan: satu baris per aturan yang dapat diverifikasi saat UAT. Bunyikan
-     sebagai pernyataan tegas (bold) + penjelasan. ID ber-prefix menu agar tidak
-     bentrok dengan bab lain. -->
+<!-- panduan: satu baris per aturan yang dapat diverifikasi saat UAT DAN terbukti
+     di kode (validasi/constraint/guard/migrasi). Bunyikan sebagai pernyataan
+     tegas (bold) + penjelasan. ID ber-prefix menu agar tidak bentrok dengan bab
+     lain. Beri komentar HTML sumber (berisi "Source: file.ext:baris") di dekat
+     tiap baris; aturan tanpa sumber JANGAN dicantumkan (tandai
+     "TIDAK TERVERIFIKASI" dan angkat ke developer). -->
 
 | ID | Aturan | Penjelasan |
 |---|---|---|
@@ -517,7 +535,7 @@ flowchart TD
 
 Seluruh tangkapan layar diambil langsung dari {{runtime.target_url — dari doc-fsd.config.yml}} pada {{DD Bulan YYYY}} dengan bahasa antarmuka **{{project.language}}** dan akun {{peran/hak yang dipakai}}. Isi datanya adalah data lingkungan uji.
 
-<!-- panduan: gunakan agent-browser untuk mengambil screenshot langsung dari
+<!-- panduan: gunakan agent-browser (https://agent-browser.dev/snapshots) untuk mengambil screenshot langsung dari
      aplikasi live. Simpan gambar di ./images/ (boleh subfolder per menu) dan
      beri nama berpola {{prefix}}-{topik}.png. -->
 
@@ -634,6 +652,29 @@ Kontrak endpoint yang menopang menu ini — acuan bagi developer & QA. Untuk Adm
 | {{POST}} | {{/rute}} | {{auth:... · capability}} | {{Menyimpan data baru}} | {{field wajib}} | {{PREFIX-04}} |
 | {{PUT/PATCH}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Mengubah data}} | {{field yang diubah}} | {{PREFIX-05}} |
 | {{DELETE}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Menghapus / menonaktifkan}} | {{id}} | {{PREFIX-06}} |
+
+<!-- INTERNAL:START - sub-bab ini DIPANGKAS saat /fsd-convert; TIDAK ikut ke .docx klien -->
+### 2.10.3 Matriks Keterlacakan (Traceability)
+
+**(Internal — untuk audit tim; TIDAK disertakan pada dokumen klien `.docx`.)**
+
+Setiap ID fungsi (2.2) dan aturan bisnis (2.4) dipetakan ke lokasi sumbernya di
+kode — bukti bahwa dokumen ini menggambarkan perilaku nyata, bukan asumsi.
+
+<!-- panduan: satu baris per ID. Kolom Sumber diisi path relatif + baris tempat
+     perilaku itu BENAR-BENAR ada (controller/model/validasi/komponen/i18n/rute).
+     ID yang belum bisa dibuktikan di kode ditulis "TIDAK TERVERIFIKASI" pada
+     kolom Sumber dan diangkat ke developer — JANGAN dikarang. Sebuah bab menu
+     hanya boleh berstatus "Selesai" (Peta Menu 1.4) bila tabel ini tidak
+     menyisakan baris tanpa sumber yang belum ditandai. -->
+
+| ID | Perilaku Singkat | Sumber (file:baris) | Status |
+|---|---|---|---|
+| {{PREFIX}}-01 | {{Melihat daftar ...}} | {{app/Http/Controllers/XController.php:42}} | Terverifikasi |
+| {{PREFIX}}-04 | {{Menambah ...}} | {{app/Http/Requests/StoreXRequest.php:20}} | Terverifikasi |
+| {{PREFIX}}-BR-01 | {{Nama tidak boleh ganda}} | {{database/migrations/2024_..._create_x.php (unique)}} | Terverifikasi |
+| {{PREFIX}}-BR-05 | {{Notifikasi ...}} | {{—}} | TIDAK TERVERIFIKASI |
+<!-- INTERNAL:END -->
 
 ---
 ---
