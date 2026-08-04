@@ -7,6 +7,9 @@ mengonversinya ke `.docx` ber-brand untuk klien/UAT.
 Berdiri sendiri: **tidak** butuh skill `tca-*`. Satu dependensi opsional
 (`agent-browser`) untuk screenshot.
 
+> **Repo:** `git@git.tonjoo.com:amrizal.nahar/doc-fsd.git` — root repo ini **adalah**
+> paket skill. Lihat [Instalasi](#instalasi-sekali-per-laptop).
+
 ---
 
 ## Model 2 lapis (baca ini dulu)
@@ -21,65 +24,94 @@ Engine datang ke proyek lewat skill; proyek hanya menyimpan config + hasil.
 
 ---
 
-## Isi paket
+## Isi paket (= root repo)
 
 ```
-doc-fsd/
+doc-fsd/                          # root repo = folder skill (~/.claude/skills/doc-fsd)
 ├── SKILL.md                      # instruksi agent (engine)
 ├── README.md                     # dokumen ini
 ├── doc-fsd.config.example.yml    # skema/contoh config proyek
 ├── template/
 │   └── fsd-master-template.md    # skeleton BAB + konvensi ID (satu sumber)
 └── docx-kit/
-    ├── reference.docx            # template gaya Word ber-brand
+    ├── reference.docx            # template gaya Word ber-brand (default netral)
     ├── build-docx.ps1            # konversi .md → .docx
-    └── make-reference-docx.py    # regenerate reference.docx (ubah brand/font)
+    └── make-reference-docx.py    # regenerate reference.docx dari brand.* config
 ```
 
 ---
 
 ## Instalasi (sekali per laptop)
 
+Repo ini **adalah** paket skill (root repo = `SKILL.md`, `template/`, `docx-kit/`).
+Instalasi = menempatkan isi repo ini di direktori skill user Claude Code:
+
+| OS | Direktori skill |
+|---|---|
+| macOS / Linux | `~/.claude/skills/doc-fsd` |
+| Windows | `%USERPROFILE%\.claude\skills\doc-fsd` |
+
 ### 1. Pasang skill
 
-Pilih salah satu cara:
-
-**A. Copy manual (paling cepat).** Salin folder `doc-fsd/` ke direktori skill user:
+**A. Clone langsung ke folder skill — REKOMENDASI (mudah di-update).**
 
 ```bash
-# Windows
-cp -r doc-fsd "$USERPROFILE/.claude/skills/doc-fsd"
+# macOS / Linux — SSH (butuh SSH key terdaftar di git.tonjoo.com)
+git clone git@git.tonjoo.com:amrizal.nahar/doc-fsd.git ~/.claude/skills/doc-fsd
+
+# atau HTTPS (tanpa SSH key)
+git clone https://git.tonjoo.com/amrizal.nahar/doc-fsd.git ~/.claude/skills/doc-fsd
+```
+
+```powershell
+# Windows PowerShell
+git clone git@git.tonjoo.com:amrizal.nahar/doc-fsd.git "$env:USERPROFILE\.claude\skills\doc-fsd"
+```
+
+Update kapan pun:
+
+```bash
+cd ~/.claude/skills/doc-fsd && git pull      # Windows: cd "$env:USERPROFILE\.claude\skills\doc-fsd"; git pull
+```
+
+**B. Clone ke workspace dev + symlink** (kalau ingin repo tersimpan di folder proyekmu):
+
+```bash
 # macOS / Linux
-cp -r doc-fsd ~/.claude/skills/doc-fsd
+git clone git@git.tonjoo.com:amrizal.nahar/doc-fsd.git ~/dev/doc-fsd
+ln -s ~/dev/doc-fsd ~/.claude/skills/doc-fsd
 ```
 
-**B. Git repo (untuk tim).** doc-fsd punya repo sendiri; clone langsung ke folder skill:
-
-```bash
-git clone git@github.com:<org>/doc-fsd.git ~/.claude/skills/doc-fsd
-# update: cd ~/.claude/skills/doc-fsd && git pull
+```powershell
+# Windows (PowerShell dengan Developer Mode / admin)
+git clone git@git.tonjoo.com:amrizal.nahar/doc-fsd.git C:\dev\doc-fsd
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\doc-fsd" -Target "C:\dev\doc-fsd"
 ```
 
-**C. Marketplace/plugin (versi-an, paling rapi).** Publish sebagai plugin lalu:
+**C. Tanpa git (copy manual).** Unduh arsip dari
+`https://git.tonjoo.com/amrizal.nahar/doc-fsd` → ekstrak isinya ke
+`~/.claude/skills/doc-fsd` (pastikan `SKILL.md` tepat di dalam folder itu, bukan
+ter-nesting satu tingkat).
 
-```
-/plugin marketplace add <org>/<marketplace>
-/plugin install doc-fsd@<org>
-```
+### 2. Verifikasi
 
-Setelah terpasang, buka Claude Code → perintah `/doc-fsd` akan tersedia.
+- Pastikan file ada di: `~/.claude/skills/doc-fsd/SKILL.md`.
+- Buka (atau restart) Claude Code → ketik `/doc-fsd` → perintah muncul.
 
-### 2. Pasang prasyarat sistem
+### 3. Pasang prasyarat sistem
 
 Skill hanya orkestrator; alat berat dipasang terpisah. Yang hilang tidak bikin
-gagal total — langkah terkait akan dilewati dengan catatan.
+gagal total — langkah terkait dilewati dengan catatan.
 
-| Prasyarat | Untuk | Wajib? | Install |
-|---|---|---|---|
-| **Pandoc** | konversi `.md` → `.docx` | mode `build` | `winget install --id JohnMacFarlane.Pandoc` |
-| **mermaid-cli** (`mmdc`) | render diagram/ERD `.mmd` → `.png` | diagram | `npm i -g @mermaid-js/mermaid-cli` |
-| **agent-browser** (skill) | screenshot dari app live | screenshot | sudah tersedia di banyak proyek Tonjoo |
-| **python-docx** | regenerate `reference.docx` (ganti brand) | opsional | `pip install python-docx` |
+| Prasyarat | Untuk | Wajib? | Install (Windows) | Install (macOS/Linux) |
+|---|---|---|---|---|
+| **Pandoc** | konversi `.md` → `.docx` | mode `build` | `winget install --id JohnMacFarlane.Pandoc` | `brew install pandoc` / `apt install pandoc` |
+| **mermaid-cli** (`mmdc`) | render diagram/ERD `.mmd` → `.png` | diagram | `npm i -g @mermaid-js/mermaid-cli` | `npm i -g @mermaid-js/mermaid-cli` |
+| **python-docx + PyYAML** | regenerate `reference.docx` (ganti brand) | opsional | `pip install python-docx pyyaml` | `pip install python-docx pyyaml` |
+| **agent-browser** (skill) | screenshot dari app live | screenshot | pasang skill `agent-browser` | pasang skill `agent-browser` |
+
+> Catatan: **SSH** memerlukan public key kamu terdaftar di Profil → SSH Keys pada
+> git.tonjoo.com. Kalau belum, pakai URL **HTTPS**.
 
 ---
 
