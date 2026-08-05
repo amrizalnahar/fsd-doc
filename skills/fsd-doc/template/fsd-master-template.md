@@ -595,30 +595,47 @@ Sub-bab ini ditujukan bagi tim pengembang & penguji. Memuat struktur data (ERD) 
 
 Memperlihatkan tabel basis data ({{codebase.backend.db}}) yang dipakai menu ini beserta relasinya. Sumber kebenaran adalah migrasi & model backend (lihat `codebase.backend.migrations` dan `codebase.backend.models` pada doc-fsd.config.yml).
 
-<!-- panduan ERD (WAJIB SERAGAM — ikuti persis agar semua dokumen konsisten):
+<!-- ============================================================================
+     STANDAR ERD (WAJIB SERAGAM — ikuti PERSIS agar semua dokumen konsisten).
+     Pola ini sudah teruji render di mermaid v11; jangan improvisasi styling.
+     ============================================================================
      1) ERD DITULIS sebagai Mermaid `erDiagram` (BUKAN flowchart, BUKAN gambar
         tangan, BUKAN tabel). Simpan sumbernya ke:
             ./images/{{prefix}}-erd.mmd
      2) LANGSUNG render ke PNG (flag baku -b white -s 3, lihat "Cara pakai" poin 9):
             mmdc -i ./images/{{prefix}}-erd.mmd \
                  -o ./images/{{prefix}}-erd.png -b white -s 3
-     3) Isi entitas dengan KOLOM KUNCI saja (PK/FK + kolom yang benar-benar dipakai
+
+     3) DUA KATEGORI TABEL (inilah inti keseragamannya) — tiap tabel HARUS masuk
+        salah satu, dan dibedakan HANYA lewat garis tepinya:
+          a. Tabel UTAMA / INTI menu — tabel yang MENJADI PEMBAHASAN menu ini
+             (langsung dibaca/ditulis alur menu). Ini yang di-HIGHLIGHT.
+             Boleh lebih dari satu bila memang inti (mis. entitas + tabel pivotnya).
+                 → style: stroke:{{brand.color_primary}},stroke-width:3px
+          b. Tabel RELASI / terkait — tabel modul/menu lain yang hanya
+             terhubung (master/referensi/pivot milik menu lain). Warna STANDAR saja.
+                 → style: stroke:#9AA7B4,stroke-width:1px
+
+     4) PENTING (mermaid v11): styling HANYA pada GARIS TEPI (`stroke` +
+        `stroke-width`). JANGAN pakai `fill:` atau `color:` pada entitas — isian
+        warna MENUTUPI baris kolom sehingga daftar field ikut hilang. Highlight
+        cukup dari ketebalan & warna garis tepi (3px brand vs 1px abu).
+
+     5) Isi entitas dengan KOLOM KUNCI saja (PK/FK + kolom yang benar-benar dipakai
         menu ini), bukan seluruh kolom. Tandai `PK`/`FK` dan beri komentar singkat
         (dalam tanda kutip) pada kolom penting (mis. status yang harus bernilai
-        tertentu).
-     4) Relasi memakai notasi crow's foot mermaid (`||--o{` = satu-ke-banyak) dan
-        DIBERI LABEL nama foreign key (mis. : "job_order_id"). Boleh ada beberapa
+        tertentu, mis. status_post "publik: = 'diposting'").
+
+     6) Relasi memakai notasi crow's foot mermaid (`||--o{` = satu-ke-banyak) dan
+        DIBERI LABEL nama foreign key (mis. : "office_id"). Boleh ada beberapa
         relasi antar tabel yang sama bila FK-nya berbeda.
-     5) WARNA untuk membedakan tabel — pakai `style` (ganti hex dengan
-        brand.color_primary / brand.color_primary_dark dari doc-fsd.config.yml):
-          - Tabel INTI menu ini   → primer: fill:{{brand.color_primary}},stroke:{{brand.color_primary_dark}},stroke-width:2px,color:#ffffff
-          - Tabel modul/menu lain → abu   : fill:#EEF2F6,stroke:#9AA7B4,color:#1f2933
-     Kerangka .mmd (ganti nama tabel/kolom sesuai menu, lalu render). Hapus blok
-     contoh ini setelah .mmd sungguhan dibuat & dirender:
+
+     Kerangka .mmd BAKU (ganti nama tabel/kolom sesuai menu, lalu render). Hapus
+     blok contoh ini setelah .mmd sungguhan dibuat & dirender:
 
 erDiagram
-    %% Kotak biru = tabel inti menu ini; kotak abu = tabel terkait
-    {{tabel_inti}} {
+    %% Garis tepi tebal brand = tabel UTAMA menu ini; garis tepi abu tipis = tabel relasi.
+    {{tabel_utama}} {
         bigint id PK
         bigint {{relasi}}_id FK "keterangan"
         string {{kolom_kunci}} "keterangan (mis. harus 'diposting')"
@@ -627,15 +644,16 @@ erDiagram
         bigint id PK
         string name
     }
-    {{tabel_terkait}} ||--o{ {{tabel_inti}} : "{{foreign_key}}"
+    {{tabel_terkait}} ||--o{ {{tabel_utama}} : "{{foreign_key}}"
 
-    style {{tabel_inti}} fill:{{brand.color_primary}},stroke:{{brand.color_primary_dark}},stroke-width:2px,color:#ffffff
-    style {{tabel_terkait}} fill:#EEF2F6,stroke:#9AA7B4,color:#1f2933
+    %% styling HANYA garis tepi (stroke) — JANGAN fill/color (menutupi baris kolom di mermaid v11).
+    style {{tabel_utama}} stroke:{{brand.color_primary}},stroke-width:3px
+    style {{tabel_terkait}} stroke:#9AA7B4,stroke-width:1px
 -->
 
 ![{{ERD menu}}](<./images/{{prefix}}-erd.png>)
 
-*Gambar {{2.x}} — ERD menu {{Nama Menu}} (mermaid `erDiagram`). Kotak biru = tabel inti fitur ini; kotak abu = tabel terkait. Notasi crow's foot (`||--o{`) menandai relasi satu-ke-banyak.*
+*Gambar {{2.x}} — ERD menu {{Nama Menu}} (mermaid `erDiagram`). Tabel bergaris tepi tebal berwarna = tabel utama/inti menu ini; tabel bergaris tepi abu tipis = tabel relasi/terkait. Notasi crow's foot (`||--o{`) menandai relasi satu-ke-banyak.*
 
 ### 2.10.2 Referensi API/Endpoint
 

@@ -11,7 +11,7 @@ mengonversinya ke `.docx` ber-brand untuk klien/UAT.
 | `fsd-convert` | `/fsd-convert <modul>` | Konversi `.md` modul → `.docx` ber-brand (salinan klien). |
 
 Berdiri sendiri: **tidak** butuh skill `tca-*`. Satu dependensi opsional
-(`agent-browser` — yang dimaksud: <https://agent-browser.dev/snapshots>) untuk
+(`agent-browser`, pasang dengan `npx skills add vercel-labs/agent-browser`) untuk
 screenshot pada `fsd-doc`.
 
 > **Repo:** `git@git.tonjoo.com:amrizal.nahar/doc-fsd.git` — root repo ini
@@ -132,7 +132,7 @@ gagal total — langkah terkait dilewati dengan catatan.
 | **Pandoc** | `fsd-convert` | ya (konversi) | `winget install --id JohnMacFarlane.Pandoc` | `brew install pandoc` / `apt install pandoc` |
 | **mermaid-cli** (`mmdc`) | `fsd-doc` (diagram/ERD) | opsional | `npm i -g @mermaid-js/mermaid-cli` | `npm i -g @mermaid-js/mermaid-cli` |
 | **python-docx + PyYAML** | `fsd-convert` (regenerate `reference.docx`) | opsional | `pip install python-docx pyyaml` | `pip install python-docx pyyaml` |
-| **agent-browser** (skill) | `fsd-doc` (screenshot) | opsional | pasang skill `agent-browser` (<https://agent-browser.dev/snapshots>) | pasang skill `agent-browser` (<https://agent-browser.dev/snapshots>) |
+| **agent-browser** (skill) | `fsd-doc` (screenshot) | opsional | `npx skills add vercel-labs/agent-browser` | `npx skills add vercel-labs/agent-browser` |
 
 > Catatan: **SSH** memerlukan public key kamu terdaftar di Profil → SSH Keys pada
 > git.tonjoo.com. Kalau belum, pakai URL **HTTPS**
@@ -159,6 +159,11 @@ repo utama) dan membuat folder output di bawah `docs/tasks/fsd/`.
 /fsd-doc admin-ta "Manage Vacancy"
 /fsd-doc admin-ta "Job Applicant"     # menu berikutnya → BAB baru
 ```
+
+> **Konvensi:** `<modul>` umumnya = satu **role/portal pengguna** (mis. `admin-ta`,
+> `applicant`, `public`), masing-masing dijaga guard/role sendiri di `modules[]`.
+> Jadi `<modul>` boleh dibaca sebagai **nama role** — satu dokumen FSD mencakup
+> seluruh menu yang diakses role tersebut.
 
 - File baru → isi BAB I lalu BAB II.
 - File ada → menu ditambahkan sebagai BAB baru; BAB sebelumnya tidak diubah;

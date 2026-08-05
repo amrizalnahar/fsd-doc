@@ -333,8 +333,12 @@ def build(output_path):
 
     # ---- Compact (list rapat + isi sel tabel yang dipakai Pandoc).
     #      Rata KIRI: mengalahkan Normal (justify) untuk teks di dalam sel tabel.
+    #      SENGAJA TANPA color: warna teks sel diserahkan ke gaya "Table" —
+    #      sel isi mewarisi teks gelap (rPr Table), sedangkan baris header
+    #      memakai teks PUTIH dari conditional formatting firstRow. Bila Compact
+    #      memaksa warna gelap di sini, ia mengalahkan header putih → kontras buruk.
     compact = ensure_para_style(doc, "Compact")
-    set_font(compact, name=BODY_FONT, size=11, color=DARK)
+    set_font(compact, name=BODY_FONT, size=11)
     set_spacing(compact, after=2, line=1.1, align=WD_ALIGN_PARAGRAPH.LEFT)
 
     # ---- Quote / Block Text
