@@ -72,6 +72,10 @@ modules:
 runtime:
   target_url: "https://dashboard.karir-aab.tongkolspace.com/"
   ui_language: id                       # bahasa antarmuka saat screenshot
+  viewport: "1440x900"                  # WAJIB desktop lebar agar sidebar tidak
+                                        # overlap konten (viewport sempit memicu
+                                        # layout mobile/overlay). Naikkan bila
+                                        # sidebar masih menutup konten, mis. 1600x900.
 
 # --- Lokasi keluaran (dokumen & aset lahir di repo proyek) --------------------
 output:

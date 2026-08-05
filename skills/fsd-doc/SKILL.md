@@ -168,9 +168,20 @@ Format `docs/tasks/credentialRoles/<peran>.md`:
 
 ### 4.2 Ambil screenshot
 
-- Login ke URL memakai kredensial di atas (via `agent-browser`), buka menu.
+- **LANGKAH PERTAMA — set viewport desktop lebar SEBELUM login/navigasi/capture.**
+  Pakai `runtime.viewport` (baku `1440x900`). Ini WAJIB dan bukan langkah opsional:
+  viewport sempit memicu layout mobile/overlay sehingga sidebar `fixed` menutupi
+  konten (label kiri terpotong). Set sekali di awal sesi; viewport bertahan antar-
+  menu, **jangan** menunggu screenshot pertama gagal lalu recapture.
+  - Contoh (agent-browser): `browser_set_viewport 1440 900` (atau parameter
+    width/height sesuai skill) sebelum `browser_navigate`.
+- Login ke URL memakai kredensial di atas, buka menu.
 - Ambil screenshot; simpan ke
   `{output.screenshots_dir}/{modul}/{menu-slug}/{prefix}-{topik}.png`.
+- **Bila sidebar MASIH menutupi konten** meski viewport sudah 1440 lebar
+  (mis. sidebar aplikasi memang butuh ruang lebih): naikkan lebar (mis. `1600x900`
+  atau `1920x1080`) lalu capture ulang, dan **perbarui `runtime.viewport` di config**
+  agar menu berikutnya tidak mengulang masalah yang sama.
 - `agent-browser` tidak terpasang → lewati langkah ini, sisipkan placeholder
   gambar + catatan "screenshot belum diambil (agent-browser tidak tersedia)".
 
