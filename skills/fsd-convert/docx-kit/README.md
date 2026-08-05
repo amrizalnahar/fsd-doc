@@ -22,6 +22,7 @@ Bagian di bawah untuk pemakaian manual / penyesuaian.
 | `reference.docx` | Template gaya Word (font, heading, tabel, sampul, header/footer). Dipakai Pandoc. |
 | `make-reference-docx.py` | Pembangun `reference.docx`; membaca brand dari `doc-fsd.config.yml`. |
 | `build-docx.ps1` | Satu perintah konversi `.md` → `.docx`. |
+| `harden-table-headers.py` | Post-process: bake teks putih + latar brand header tabel sebagai *direct formatting* agar tetap benar di **Google Docs** (dipanggil otomatis oleh `build-docx.ps1`). |
 | `README.md` | Dokumen ini. |
 
 ---
@@ -78,7 +79,10 @@ Opsi:
 - **Setiap BAB mulai di halaman baru** (page-break otomatis pada Heading 1).
 - **Perataan**: paragraf isi rata kanan-kiri (justify); teks dalam sel tabel rata
   kiri; gambar & blok tabel rata tengah.
-- **Tabel**: grid tipis, baris header berlatar warna brand + teks putih.
+- **Tabel**: grid tipis, baris header berlatar warna brand + teks putih. Warna
+  header dibaking sebagai *direct formatting* (oleh `harden-table-headers.py`)
+  supaya bertahan saat dokumen diunggah ke **Google Docs** — yang mengabaikan
+  *conditional formatting* gaya tabel sehingga teks putih akan jadi hitam tanpa ini.
 - **Header/footer**: label dokumen (dari `project.*`) + "Halaman X dari Y".
 
 ---

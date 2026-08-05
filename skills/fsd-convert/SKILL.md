@@ -52,6 +52,13 @@ GitHub):
 
 6. Buka di Word; bila Daftar Isi belum terisi, klik kanan → **Update Field**.
 
+> **Header tabel & Google Docs.** `build-docx.ps1` otomatis menjalankan
+> `harden-table-headers.py` sesudah Pandoc: teks putih + latar brand pada baris
+> header dibaking sebagai *direct formatting*. Tanpa ini, saat `.docx` diunggah ke
+> Google Docs (yang mengabaikan *conditional formatting* gaya tabel), teks putih
+> header berubah jadi hitam. Butuh Python + `python-docx`; bila tak ada, langkah ini
+> dilewati dengan pesan — dokumen tetap benar di Word.
+
 ## Brand .docx
 
 Warna/font/logo `.docx` berasal dari `./docx-kit/reference.docx`. `reference.docx`

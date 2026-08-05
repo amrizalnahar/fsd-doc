@@ -78,6 +78,28 @@ pandoc $InputMd `
     -o "$Out"
 
 if ($LASTEXITCODE -eq 0) {
+    # --- Hardening header tabel untuk portabilitas (Google Docs).
+    #     Warna header dari reference.docx dipasang lewat conditional formatting
+    #     gaya tabel (tblStylePr firstRow). Word menghormatinya, tetapi Google Docs
+    #     MENGABAIKANNYA saat impor -> teks putih jadi hitam. Langkah ini membaking
+    #     teks putih + latar brand sebagai DIRECT formatting agar konsisten di mana
+    #     pun dokumen dibuka. Butuh Python + python-docx; bila tak ada -> dilewati
+    #     (dokumen tetap valid & benar di Word).
+    $harden = Join-Path $here "harden-table-headers.py"
+    $py = $null
+    foreach ($cmd in @("py", "python", "python3")) {
+        if (Get-Command $cmd -ErrorAction SilentlyContinue) { $py = $cmd; break }
+    }
+    if ($py -and (Test-Path $harden)) {
+        & $py $harden $Out --reference $reference
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[!] Hardening header tabel dilewati/gagal - dokumen tetap benar di Word." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "[!] Python tak ditemukan - header tabel tak di-harden untuk Google Docs." -ForegroundColor Yellow
+        Write-Host "    (Header putih tetap benar di Word. Untuk Google Docs: pasang Python + 'pip install python-docx'.)" -ForegroundColor DarkGray
+    }
+
     Write-Host "[ok] Selesai: $Out" -ForegroundColor Green
     Write-Host "     Buka di Word, klik kanan Daftar Isi > Update Field bila perlu." -ForegroundColor DarkGray
 } else {
