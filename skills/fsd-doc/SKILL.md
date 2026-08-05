@@ -27,7 +27,12 @@ menggagalkan total; degrade dan catat ke pengguna.
 2. Baca template: `./template/fsd-master-template.md` (di folder skill ini).
    - Bila proyek punya `docs/tasks/fsd/template.override.md`, pakai itu sebagai
      ganti template bawaan (lihat bagian Override).
-3. Prasyarat yang hilang → JANGAN gagal total; degrade (lewati langkah terkait)
+3. **Baca sidecar progres bila ada:** `{output.documents_dir}/fsd-{modul}.progress.md`.
+   Ini titik-lanjut kerja (artefak INTERNAL, bukan bagian dokumen klien). Bila ada
+   → pakai untuk langsung tahu **di mana berhenti**, **pertanyaan terbuka yang
+   memblokir Selesai**, dan **keputusan sesi sebelumnya** — jangan menurunkan
+   ulang dari nol. Bila tidak ada → nanti dibuat di Langkah 7. Lihat langkah 7.
+4. Prasyarat yang hilang → JANGAN gagal total; degrade (lewati langkah terkait)
    dan catat ke pengguna.
 
 ## Prinsip FSD
@@ -226,10 +231,54 @@ Format `docs/tasks/credentialRoles/<peran>.md`:
   `file:baris` sumbernya (lihat template). Baris tanpa sumber = TIDAK
   TERVERIFIKASI, diangkat ke developer.
 
-## 7. Perbarui pelacak
+## 7. Perbarui pelacak & sidecar progres
 
 Update Daftar Isi + Peta Menu (1.4). Status **Selesai** hanya bila lolos
 self-check (langkah 8). Selama ada yang belum diverifikasi → **Draf**.
+
+**Lalu perbarui sidecar progres** `{output.documents_dir}/fsd-{modul}.progress.md`
+sebelum sesi berakhir (buat bila belum ada). Ini artefak kerja **INTERNAL** —
+sumber kebenaran "di mana kita berhenti", **bukan** bagian dokumen klien: tidak
+diambil `/fsd-convert` (ia hanya menarik `fsd-{modul}.md`) dan tidak di-embed ke
+`.docx`. Peta Menu (1.4) hanya melacak status antar-BAB; sidecar menutup tiga hal
+yang tidak tertangkap di mana pun:
+
+1. **Titik-lanjut** — BAB/sub-bab yang sedang digarap + aksi berikut paling atas,
+   agar sesi baru lanjut di dalam BAB, bukan cuma tahu "Draf".
+2. **Pertanyaan terbuka** — indeks semua penanda `TIDAK TERVERIFIKASI` yang masih
+   memblokir status **Selesai** (kumpulkan yang tersebar in-line jadi satu daftar
+   supaya tak lupa ditanyakan/dijawab antar sesi).
+3. **Log keputusan sesi** — keputusan yang BUKAN source-traceable (mis. klien
+   minta lewati menu X; tabel Y sengaja keluar dari ERD karena deprecated).
+
+Format:
+
+```markdown
+# Status Pengerjaan FSD — {modul}  (INTERNAL — jangan kirim ke klien)
+
+> Sidecar kerja, bukan bagian dokumen FSD. Tidak dikonversi ke .docx.
+> Dibaca di Langkah 0, diperbarui di Langkah 7 tiap sesi.
+
+## Titik-lanjut
+- Sesi terakhir  : <ringkas yang dikerjakan>
+- Sedang digarap : BAB <n> "<menu>" — sub-bab <x.y> (Draf)
+- Aksi berikut   : <langkah konkret paling atas untuk sesi berikut>
+
+## Pertanyaan terbuka (TIDAK TERVERIFIKASI) — blokir "Selesai"
+| # | BAB/sub-bab | ID             | Pertanyaan ke developer        | Status  |
+|---|-------------|----------------|--------------------------------|---------|
+| 1 | 2.4         | {PREFIX}-BR-03 | <apa yang perlu dikonfirmasi>  | terbuka |
+
+## Log keputusan sesi (yang bukan source-traceable)
+| Keputusan                  | Alasan                             |
+|----------------------------|------------------------------------|
+| <mis. skip menu "Ekspor">  | <mis. klien bilang belum dipakai>  |
+```
+
+Jaga sidecar tetap ramping: begitu sebuah pertanyaan terjawab, ubah klaimnya jadi
+bersumber di dokumen lalu tandai barisnya `terjawab`/hapus; begitu sebuah BAB
+**Selesai** & beku, geser titik-lanjut ke BAB berikutnya. (File ini internal —
+tim boleh meng-gitignore bila tak ingin catatan sesi masuk repo klien.)
 
 ## 8. Self-check (gerbang akhir sebelum "Selesai")
 
@@ -259,8 +308,10 @@ Aturan Bisnis (2.4), pastikan syarat di bawah terpenuhi.
 Hasil:
 - **Semua lolos** → BAB boleh berstatus **Selesai** (langkah 7).
 - **Ada GAGAL** → status tetap **Draf**. Tampilkan ke pengguna daftar baris yang
-  melanggar (ID + alasan) dan hal yang perlu dikonfirmasi ke developer. **Jangan**
-  menandai Selesai dan **jangan** menambal celah dengan tebakan.
+  melanggar (ID + alasan) dan hal yang perlu dikonfirmasi ke developer, **lalu
+  catat baris-baris itu ke "Pertanyaan terbuka" pada sidecar progres** (Langkah 7)
+  supaya tidak hilang antar sesi. **Jangan** menandai Selesai dan **jangan**
+  menambal celah dengan tebakan.
 
 ## Override template
 
