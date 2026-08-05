@@ -44,6 +44,9 @@ codebase:
     path: "frontend-dashboard/"
 
 # --- Modul = satu dokumen FSD. Menentukan guard, portal, slug file, kredensial.
+#  KONVENSI: satu modul umumnya SETARA satu ROLE / portal pengguna (mis.
+#  admin-ta, applicant, public) — masing-masing dijaga guard/role sendiri
+#  (lihat `guard`). Jadi `<modul>`/`slug` lazim dibaca sebagai NAMA ROLE.
 #  Nama file output: fsd-{slug}.md  →  FSD-Modul-{Slug-Title-Case}.docx
 #  `credentials` = PATH ke file kredensial peran (BUKAN secrets-nya). Isinya
 #  ditanyakan /fsd-doc saat screenshot; folder docs/tasks/credentialRoles/ WAJIB

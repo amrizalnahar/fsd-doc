@@ -94,6 +94,12 @@ ditandai `TIDAK TERVERIFIKASI`. Selama masih ada kalimat tanpa dasar → **Draf*
 Nama file diturunkan dari `<modul>` (slug pada `modules[]`):
 `{output.documents_dir}/fsd-{slug}.md`.
 
+> **Konvensi `<modul>` = role/portal.** Satu modul umumnya setara satu **role /
+> portal pengguna** (mis. `admin-ta`, `applicant`, `public`), masing-masing
+> dijaga guard/role tersendiri (`modules[].guard`). Jadi `<modul>` boleh dibaca
+> sebagai **nama role** — dokumen FSD-nya mencakup seluruh menu yang diakses role
+> itu, dan screenshot memakai kredensial peran yang sama.
+
 - File belum ada → buat baru; isi **BAB I** dari template lalu **BAB II** untuk
   menu yang diminta.
 - File sudah ada → **baca dulu**, tambahkan menu sebagai **BAB baru** (naikkan
@@ -178,8 +184,12 @@ Format `docs/tasks/credentialRoles/<peran>.md`:
 
 - **ERD (.10.1):** baca `codebase.backend.migrations` & `.models` sebagai sumber
   kebenaran. Tulis Mermaid `erDiagram` (WAJIB `erDiagram`, bukan flowchart) ke
-  `.mmd`, render ke PNG. Highlight tabel INTI menu (warna `brand.color_primary`),
-  tabel terkait abu. Isi kolom KUNCI (PK/FK + kolom yang dipakai) saja.
+  `.mmd`, render ke PNG. **Standar seragam (lihat template 2.10.1):** dua kategori
+  tabel dibedakan HANYA lewat garis tepi — tabel UTAMA/INTI menu di-highlight
+  `stroke:{brand.color_primary},stroke-width:3px`, tabel RELASI/terkait standar
+  `stroke:#9AA7B4,stroke-width:1px`. **JANGAN** pakai `fill:`/`color:` pada entitas
+  (menutupi baris kolom di mermaid v11). Isi kolom KUNCI (PK/FK + kolom yang
+  dipakai) saja.
 - **Endpoint (.10.2):** daftar rute/endpoint yang **benar-benar terdefinisi** di
   `codebase.backend.routes`/frontend (bukan tebakan konvensi REST); sebut guard &
   capability (dari `modules[].guard` + kode), selaraskan kolom "Terkait Fungsi"
