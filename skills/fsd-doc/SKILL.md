@@ -130,6 +130,23 @@ bersumber tidak ditulis — tandai `TIDAK TERVERIFIKASI` dan tanya developer.
 > <https://agent-browser.dev/snapshots>. Bila skill itu tidak terpasang, lewati
 > langkah ini (lihat degradasi di akhir 4.2).
 
+> **Instalasi agar terlihat Claude Code (WAJIB pakai flag).** `npx skills add`
+> menaruh skill di canonical `.agents/skills/`, sedangkan Claude Code hanya
+> memindai `.claude/skills/`. Junction ke `.claude/skills/` **hanya** dibuat bila
+> Claude Code dipilih sebagai target. Jadi pasang deterministik:
+>
+> ```bash
+> # global (semua project), target Claude Code, tanpa prompt:
+> npx skills add vercel-labs/agent-browser -g -a claude-code -y
+> # per-project: hilangkan -g (jalankan dari root project)
+> ```
+>
+> Tanpa `-a claude-code`, skill terpasang tapi **tak terlihat** Claude Code →
+> screenshot dilewati. Windows aman: CLI memakai junction (tak butuh admin).
+> Verifikasi: `agent-browser --version` dan pastikan `agent-browser` muncul di
+> daftar skill sesi baru. Bila terlanjur ter-install tanpa flag, jembatani:
+> `New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\agent-browser" -Target "$env:USERPROFILE\.agents\skills\agent-browser"`.
+
 ### 4.1 Siapkan kredensial (tanya bila belum ada, lalu simpan & pakai ulang)
 
 Kredensial login per peran tinggal di `modules[].credentials` (mis.
