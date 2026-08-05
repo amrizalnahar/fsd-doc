@@ -100,6 +100,20 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "    (Header putih tetap benar di Word. Untuk Google Docs: pasang Python + 'pip install python-docx'.)" -ForegroundColor DarkGray
     }
 
+    # --- Rapikan ukuran & perataan gambar.
+    #     Diagram Mermaid dirender skala tinggi (mmdc -s 3) agar tajam, tetapi Pandoc
+    #     meng-embed pada ukuran native -> gambar bisa memenuhi 1 halaman penuh dan
+    #     tak proporsional. Langkah ini membatasi UKURAN TAMPILAN saja (bukan resolusi
+    #     PNG) dan memusatkan paragraf gambar. Rasio & piksel PNG utuh -> tetap tajam
+    #     saat diperlebar. Butuh Python + python-docx; bila tak ada -> dilewati.
+    $fit = Join-Path $here "fit-images.py"
+    if ($py -and (Test-Path $fit)) {
+        & $py $fit $Out
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[!] Perapian ukuran gambar dilewati/gagal - dokumen tetap valid." -ForegroundColor Yellow
+        }
+    }
+
     Write-Host "[ok] Selesai: $Out" -ForegroundColor Green
     Write-Host "     Buka di Word, klik kanan Daftar Isi > Update Field bila perlu." -ForegroundColor DarkGray
 } else {

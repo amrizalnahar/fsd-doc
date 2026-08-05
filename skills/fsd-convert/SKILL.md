@@ -59,6 +59,14 @@ GitHub):
 > header berubah jadi hitam. Butuh Python + `python-docx`; bila tak ada, langkah ini
 > dilewati dengan pesan — dokumen tetap benar di Word.
 
+> **Ukuran & perataan gambar.** `build-docx.ps1` juga menjalankan `fit-images.py`:
+> diagram Mermaid dirender skala tinggi (`mmdc -s 3`) agar tajam, tetapi Pandoc
+> meng-embed pada ukuran native sehingga satu gambar bisa memenuhi satu halaman.
+> Skrip membatasi *ukuran tampilan* saja (lebar ≤ area cetak, tinggi ≤ setengah
+> halaman — atur via `--max-height-frac`/`--max-height-in`) dan memusatkan paragraf
+> gambar; rasio & piksel PNG tetap utuh sehingga proporsional namun tak pecah saat
+> diperlebar. Butuh Python + `python-docx`; bila tak ada, dilewati (dokumen tetap valid).
+
 ## Brand .docx
 
 Warna/font/logo `.docx` berasal dari `./docx-kit/reference.docx`. `reference.docx`

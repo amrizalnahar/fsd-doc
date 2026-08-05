@@ -23,6 +23,7 @@ Bagian di bawah untuk pemakaian manual / penyesuaian.
 | `make-reference-docx.py` | Pembangun `reference.docx`; membaca brand dari `doc-fsd.config.yml`. |
 | `build-docx.ps1` | Satu perintah konversi `.md` → `.docx`. |
 | `harden-table-headers.py` | Post-process: bake teks putih + latar brand header tabel sebagai *direct formatting* agar tetap benar di **Google Docs** (dipanggil otomatis oleh `build-docx.ps1`). |
+| `fit-images.py` | Post-process: batasi *ukuran tampilan* gambar (bukan resolusi PNG) agar proporsional (tak 1 halaman/gambar) + pusatkan; dipanggil otomatis oleh `build-docx.ps1`. |
 | `README.md` | Dokumen ini. |
 
 ---
@@ -78,7 +79,13 @@ Opsi:
 - **Heading berwarna brand** (font judul), isi font body 11pt, spasi 1.15.
 - **Setiap BAB mulai di halaman baru** (page-break otomatis pada Heading 1).
 - **Perataan**: paragraf isi rata kanan-kiri (justify); teks dalam sel tabel rata
-  kiri; gambar & blok tabel rata tengah.
+  kiri; gambar & blok tabel rata tengah (paragraf gambar juga dipusatkan ulang
+  oleh `fit-images.py` sebagai pengaman).
+- **Ukuran gambar**: diagram Mermaid dirender skala tinggi (`mmdc -s 3`) agar tajam,
+  tetapi Pandoc meng-embed pada ukuran native sehingga satu gambar bisa memenuhi
+  satu halaman. `fit-images.py` membatasi *ukuran tampilan* (lebar <= area cetak,
+  tinggi <= setengah halaman; ubah lewat `--max-height-frac`/`--max-height-in`)
+  tanpa menyentuh piksel PNG — jadi proporsional namun tetap tajam saat diperlebar.
 - **Tabel**: grid tipis, baris header berlatar warna brand + teks putih. Warna
   header dibaking sebagai *direct formatting* (oleh `harden-table-headers.py`)
   supaya bertahan saat dokumen diunggah ke **Google Docs** — yang mengabaikan
