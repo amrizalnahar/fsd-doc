@@ -10,8 +10,10 @@ Prinsip kunci: Markdown adalah sumber **isi**; tampilan `.docx` ditentukan oleh
 semua FSD tampil konsisten. Warna/font/label `reference.docx` diambil dari
 `brand.*` + `project.*` pada **doc-fsd.config.yml** proyek.
 
-Biasanya kamu tidak memanggil kit ini langsung — jalankan `/fsd-convert <modul>`.
-Bagian di bawah untuk pemakaian manual / penyesuaian.
+Biasanya kamu tidak memanggil kit ini langsung — jalankan
+`/fsd-convert <role[,role...]>`. Satu role memilih satu FSD; role dipisahkan
+koma memilih satu FSD lintas-role canonical. Bagian di bawah untuk pemakaian
+manual / penyesuaian.
 
 ---
 
@@ -24,6 +26,7 @@ Bagian di bawah untuk pemakaian manual / penyesuaian.
 | `build-docx.ps1` | Satu perintah konversi `.md` → `.docx`. |
 | `harden-table-headers.py` | Post-process: bake teks putih + latar brand header tabel sebagai *direct formatting* agar tetap benar di **Google Docs** (dipanggil otomatis oleh `build-docx.ps1`). |
 | `fit-images.py` | Post-process: batasi *ukuran tampilan* gambar (bukan resolusi PNG) agar proporsional (tak 1 halaman/gambar) + pusatkan; dipanggil otomatis oleh `build-docx.ps1`. |
+| `insert-logo.py` | Post-process: sisipkan `brand.logo` (bila diatur di config) ke sampul — Pandoc mengabaikan body `reference.docx` sehingga logo tak bisa ditempel di sana; dipanggil otomatis oleh `build-docx.ps1`. |
 | `README.md` | Dokumen ini. |
 
 ---
@@ -47,7 +50,7 @@ Bagian di bawah untuk pemakaian manual / penyesuaian.
 
 ### 1. Siapkan salinan untuk dikonversi
 
-Sebelum konversi (terutama salinan klien), lakukan pemangkasan pada **salinan**
+Sebelum konversi (terutama salinan klien), siapkan **salinan**
 (biar master `.md` tetap utuh untuk dibaca di GitHub):
 
 1. **Isi metadata sampul** — blok YAML `---` di paling atas file (judul, modul,
@@ -56,19 +59,41 @@ Sebelum konversi (terutama salinan klien), lakukan pemangkasan pada **salinan**
    membiarkannya = Daftar Isi ganda.
 3. Pastikan semua diagram sudah PNG (Pandoc meng-embed PNG, bukan `.mmd`).
 
+`build-docx.ps1` sendiri **otomatis**:
+- memangkas setiap blok `<!-- INTERNAL:START --> … <!-- INTERNAL:END -->`
+  (mis. Matriks Keterlacakan) dari salinan sebelum dikonversi — artefak
+  internal tim tidak pernah sampai ke `.docx` klien; skrip berhenti dengan
+  error bila menemukan penanda tak berpasangan;
+- memvalidasi setiap referensi gambar lokal (`![...](path)`) sebelum memanggil
+  Pandoc dan **gagal (fail-fast)** dengan daftar path yang hilang, bukan diam-
+  diam mengganti gambar dengan teks alt.
+
+Jadi langkah 1–3 di atas tetap disarankan untuk kerapian salinan, tetapi
+pemangkasan INTERNAL dan validasi gambar tidak lagi bergantung pada langkah
+manual ini.
+
 ### 2. Konversi
 
 ```powershell
-./build-docx.ps1 <path>/fsd-<modul>.md -Out <path>/FSD-Modul-<Modul>.docx
+# role tunggal
+./build-docx.ps1 <path>/fsd-admin-ta.md -Out <path>/FSD-Modul-Admin-Ta.docx
+
+# scope lintas-role; /fsd-convert sudah meresolve urutan role canonical
+./build-docx.ps1 <path>/fsd-admin-ta--applicant.md -Out <path>/FSD-Modul-Admin-Ta-Dan-Applicant.docx
 ```
 
+Tanpa `-Out`, skrip menurunkan nama dari awalan `fsd-` dan menerjemahkan `--`
+menjadi `-Dan-`; tetap gunakan `-Out` eksplisit untuk output klien yang stabil.
 Buka di Word; bila Daftar Isi belum terisi, klik kanan → **Update Field**.
 
 Opsi:
 ```powershell
-./build-docx.ps1 <input.md> -Out ./FSD-Khusus.docx   # nama output manual
-./build-docx.ps1 <input.md> -TocDepth 3               # sertakan sub-sub-bab
+./build-docx.ps1 <input.md> -Out ./FSD-Khusus.docx        # nama output manual
+./build-docx.ps1 <input.md> -TocDepth 3                    # sertakan sub-sub-bab
+./build-docx.ps1 <input.md> -Reference ./client-ref.docx   # template kustom (docx.reference)
 ```
+
+Tanpa `-Reference`, skrip memakai `reference.docx` bawaan di folder ini.
 
 ---
 
@@ -91,6 +116,8 @@ Opsi:
   supaya bertahan saat dokumen diunggah ke **Google Docs** — yang mengabaikan
   *conditional formatting* gaya tabel sehingga teks putih akan jadi hitam tanpa ini.
 - **Header/footer**: label dokumen (dari `project.*`) + "Halaman X dari Y".
+- **Logo sampul** (opsional): `brand.logo` disisipkan oleh `insert-logo.py`
+  (dipanggil otomatis oleh `build-docx.ps1`, lihat bagian berikutnya).
 
 ---
 
@@ -110,7 +137,22 @@ Yang dibaca dari config: `brand.color_primary` (heading & tabel header),
 untuk label header. Font harus terpasang di komputer pembuka dokumen.
 
 > Pandoc hanya mengambil **definisi gaya + margin + header/footer** dari
-> `reference.docx`; isi body-nya diabaikan.
+> `reference.docx`; isi body-nya diabaikan. Karena itu `brand.logo` **tidak**
+> diproses di sini — lihat `insert-logo.py` di bawah.
+
+`brand.logo` (path relatif terhadap root repo proyek, mis. `assets/logo.png`)
+disisipkan ke sampul oleh `insert-logo.py`, dipanggil otomatis sesudah Pandoc
+oleh `build-docx.ps1`:
+
+```powershell
+./build-docx.ps1 <input.md> -Out <out.docx>       # logo otomatis bila brand.logo diisi
+py insert-logo.py <out.docx>                       # atau jalankan manual
+py insert-logo.py <out.docx> --logo ./logo.png     # override path eksplisit
+```
+
+Kosong = tanpa logo, bukan error. Diisi tapi file tidak ditemukan = seluruh
+build gagal (exit 1) dengan pesan path yang salah — bukan sampul klien yang
+diam-diam tanpa logo. Butuh `pip install python-docx pyyaml`.
 
 ---
 

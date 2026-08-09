@@ -43,14 +43,22 @@ codebase:
     framework: nextjs                   # nextjs | react | vue | other
     path: "frontend-dashboard/"
 
-# --- Modul = satu dokumen FSD. Menentukan guard, portal, slug file, kredensial.
-#  KONVENSI: satu modul umumnya SETARA satu ROLE / portal pengguna (mis.
-#  admin-ta, applicant, public) — masing-masing dijaga guard/role sendiri
-#  (lihat `guard`). Jadi `<modul>`/`slug` lazim dibaca sebagai NAMA ROLE.
-#  Nama file output: fsd-{slug}.md  →  FSD-Modul-{Slug-Title-Case}.docx
+# --- modules[] = sumber role/portal untuk dokumen FSD. Menentukan guard,
+#  portal, slug artefak, dan kredensial tiap role individual.
+#  KONVENSI: satu entry umumnya SETARA satu ROLE/portal pengguna (mis. admin-ta,
+#  applicant, public) — masing-masing dijaga guard/role sendiri (lihat `guard`).
+#  /fsd-doc dan /fsd-convert menerima satu role (`admin-ta`) ATAU role-set
+#  (`admin-ta,applicant`). Role-set BUKAN entry sintetis baru di modules[]:
+#  role diurutkan mengikuti daftar ini, lalu menghasilkan satu key canonical,
+#  mis. fsd-admin-ta--applicant.md → FSD-Modul-Admin-Ta-Dan-Applicant.docx.
+#  Slug wajib unik, stabil, URL-slug-like, dan tidak boleh memuat `--` agar key
+#  role-set tidak ambigu. Input role terbalik tetap mengarah ke dokumen yang sama.
 #  `credentials` = PATH ke file kredensial peran (BUKAN secrets-nya). Isinya
-#  ditanyakan /fsd-doc saat screenshot; folder docs/tasks/credentialRoles/ WAJIB
-#  di-gitignore agar password tidak ter-commit.
+#  ditanyakan /fsd-doc saat screenshot; setiap role harus memiliki path sendiri;
+#  folder docs/tasks/credentialRoles/ WAJIB di-gitignore agar password tidak
+#  ter-commit. Path WAJIB relatif, tanpa segmen "..", dan berada DI DALAM
+#  docs/tasks/credentialRoles/ (root kredensial yang disetujui) — divalidasi
+#  oleh validate-config.py sebelum /fsd-doc membaca/menulis kredensial apa pun.
 modules:
   - slug: admin-ta
     title: "TA Portal"

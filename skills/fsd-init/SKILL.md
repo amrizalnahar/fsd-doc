@@ -40,20 +40,33 @@ config/artefak.**
    - Path migrasi/model (mis. `*/database/migrations`, `*/app/Models`).
    - Warna brand bila ada design token / skin (cari file tema/warna primer).
 3. **Tanyakan HANYA yang tidak bisa dideteksi:** nama proyek, vendor, klien, URL
-   app live, daftar modul + guard + lokasi kredensial. Satu pertanyaan per topik.
+   app live, daftar role/portal + guard + lokasi kredensial. Satu pertanyaan per
+   topik. Untuk setiap role, pastikan `slug` unik/stabil (URL-slug-like, tanpa
+   `--`), title, portal, guard, dan placeholder path kredensial tersedia.
 4. **Tulis `doc-fsd.config.yml`** memakai `./doc-fsd.config.example.yml` (di
    folder skill ini) sebagai acuan field/skema. **Simpan di dalam workspace FSD:
    `docs/tasks/fsd/doc-fsd.config.yml` — JANGAN di root repo klien** agar tidak
    mengotori repo utama. Buat folder `docs/tasks/fsd/` bila belum ada.
-5. **Buat folder output** dari `output.*` (documents, diagrams, screenshots,
+5. **Validasi config yang baru ditulis** — jalankan
+   `py ./validate-config.py <path-config>` (di folder skill ini, preflight
+   deterministik: slug unik/URL-slug-like, tanpa `--`, path `output.*`/
+   `credentials`/`docx.reference`/`brand.logo` relatif & aman, warna brand
+   `#RRGGBB`, dll). **Gagal** → perbaiki field yang ditunjuk sebelum lanjut ke
+   langkah 6; jangan biarkan config tak valid tersimpan sebagai config final.
+   Python/PyYAML tak ada → catat ke pengguna bahwa validasi dilewati, tetap
+   sampaikan aturan skema utama secara manual.
+6. **Buat folder output** dari `output.*` (documents, diagrams, screenshots,
    docx) — semuanya bersarang di bawah `docs/tasks/fsd/`, sehingga seluruh
    artefak FSD terkumpul di satu folder, tidak tercecer di root repo.
 
 Catatan path: nilai `codebase.*` dan `output.*` di config tetap ditulis relatif
 terhadap **root repo** (mis. `backend/…`, `docs/tasks/fsd/documents/…`), meski
 file config-nya sendiri berada di `docs/tasks/fsd/`.
-6. **Arahkan langkah berikutnya:** setelah config siap, tulis BAB pertama dengan
-   `/fsd-doc <modul> "<Nama Menu>"`.
+7. **Arahkan langkah berikutnya:** setelah config siap, tulis BAB pertama dengan
+   `/fsd-doc <role> "<Nama Menu>"` untuk FSD khusus role, atau
+   `/fsd-doc <role-1>,<role-2> "<Nama Menu>"` untuk satu FSD lintas-role.
+   Jangan membuat entry `modules[]` seperti `admin-ta,applicant`; role-set selalu
+   dipilih saat command dipanggil.
 
 ## Catatan
 

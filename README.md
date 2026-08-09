@@ -1,14 +1,18 @@
 # doc-fsd
 
+> **Versi 2.0.0** — mendukung satu FSD lintas-role dari selector role yang
+> dipisahkan koma. Lihat [CHANGELOG.md](CHANGELOG.md).
+
 Paket **tiga skill** untuk membuat **Functional Specification Document (FSD)**
-langsung dari sebuah codebase — satu dokumen per modul, satu BAB per menu — lalu
-mengonversinya ke `.docx` ber-brand untuk klien/UAT.
+langsung dari sebuah codebase — satu dokumen per **scope role/portal**, satu BAB
+per menu atau varian menu — lalu mengonversinya ke `.docx` ber-brand untuk
+klien/UAT.
 
 | Skill | Command | Fungsi |
 |---|---|---|
 | `fsd-init` | `/fsd-init` | Bootstrap `doc-fsd.config.yml` + folder output (wawancara gap saja). |
-| `fsd-doc` | `/fsd-doc <modul> "<Nama Menu>"` | Tulis/lanjutkan FSD satu modul: tambah BAB menu baru. Mode utama. |
-| `fsd-convert` | `/fsd-convert <modul>` | Konversi `.md` modul → `.docx` ber-brand (salinan klien). |
+| `fsd-doc` | `/fsd-doc <role[,role...]> "<Nama Menu>"` | Tulis/lanjutkan FSD satu role atau satu scope lintas-role: tambah BAB menu baru. Mode utama. |
+| `fsd-convert` | `/fsd-convert <role[,role...]>` | Konversi `.md` scope role → `.docx` ber-brand (salinan klien). |
 
 Berdiri sendiri: **tidak** butuh skill `tca-*`. Satu dependensi opsional
 (`agent-browser`, pasang dengan `npx skills add vercel-labs/agent-browser`) untuk
@@ -44,7 +48,8 @@ doc-fsd/                              # root repo = paket 3 skill
 └── skills/
     ├── fsd-init/
     │   ├── SKILL.md                 # instruksi bootstrap config
-    │   └── doc-fsd.config.example.yml   # skema/contoh config proyek
+    │   ├── doc-fsd.config.example.yml   # skema/contoh config proyek
+    │   └── validate-config.py       # preflight validator skema config (dipakai fsd-init/-doc/-convert)
     ├── fsd-doc/
     │   ├── SKILL.md                 # instruksi generator (mode utama)
     │   └── template/
@@ -55,6 +60,7 @@ doc-fsd/                              # root repo = paket 3 skill
             ├── reference.docx       # template gaya Word ber-brand (default netral)
             ├── build-docx.ps1       # konversi .md → .docx
             ├── make-reference-docx.py   # regenerate reference.docx dari brand.*
+            ├── insert-logo.py       # sisipkan brand.logo ke sampul (post-process)
             └── README.md            # panduan docx-kit
 ```
 
@@ -131,8 +137,9 @@ gagal total — langkah terkait dilewati dengan catatan.
 |---|---|---|---|---|
 | **Pandoc** | `fsd-convert` | ya (konversi) | `winget install --id JohnMacFarlane.Pandoc` | `brew install pandoc` / `apt install pandoc` |
 | **mermaid-cli** (`mmdc`) | `fsd-doc` (diagram/ERD) | opsional | `npm i -g @mermaid-js/mermaid-cli` | `npm i -g @mermaid-js/mermaid-cli` |
-| **python-docx + PyYAML** | `fsd-convert` (regenerate `reference.docx`) | opsional | `pip install python-docx pyyaml` | `pip install python-docx pyyaml` |
-| **agent-browser** (skill) | `fsd-doc` (screenshot) | opsional | `npx skills add vercel-labs/agent-browser` | `npx skills add vercel-labs/agent-browser` |
+| **python-docx + PyYAML** | `fsd-convert` (regenerate `reference.docx`, sisip logo) | opsional | `pip install python-docx pyyaml` | `pip install python-docx pyyaml` |
+| **PyYAML** | `fsd-init` (`validate-config.py`, dipakai juga oleh `fsd-doc`/`fsd-convert`) | opsional (tanpa ini validasi config dilewati dgn catatan) | `pip install pyyaml` | `pip install pyyaml` |
+| **agent-browser** (skill) | `fsd-doc` (screenshot) | opsional | `npx skills add vercel-labs/agent-browser -a claude-code -y` | `npx skills add vercel-labs/agent-browser -a claude-code -y` |
 
 > Catatan: **SSH** memerlukan public key kamu terdaftar di Profil → SSH Keys pada
 > git.tonjoo.com. Kalau belum, pakai URL **HTTPS**
@@ -149,33 +156,224 @@ gagal total — langkah terkait dilewati dengan catatan.
 ```
 
 Skill mendeteksi framework/path dari repo, menanyakan sisanya (nama, klien, URL
-app, daftar modul + guard + kredensial), lalu menulis config ke
+app, daftar role/portal + guard + lokasi kredensial), lalu menulis config ke
 `docs/tasks/fsd/doc-fsd.config.yml` (**bukan** root repo, agar tidak mengotori
 repo utama) dan membuat folder output di bawah `docs/tasks/fsd/`.
 
 ### 2. Tulis / lanjutkan FSD
 
 ```
-/fsd-doc admin-ta "Manage Vacancy"
-/fsd-doc admin-ta "Job Applicant"     # menu berikutnya → BAB baru
+# FSD fokus satu role
+/fsd-doc admin-ta "Dashboard"
+/fsd-doc admin-ta "Manage Vacancy"       # menu berikutnya → BAB baru
+
+# FSD tunggal yang membandingkan dua role
+/fsd-doc admin-ta,applicant "Dashboard"
+# input berikut memilih file yang sama karena urutan role dinormalisasi
+/fsd-doc applicant,admin-ta "Notification"
 ```
 
-> **Konvensi:** `<modul>` umumnya = satu **role/portal pengguna** (mis. `admin-ta`,
-> `applicant`, `public`), masing-masing dijaga guard/role sendiri di `modules[]`.
-> Jadi `<modul>` boleh dibaca sebagai **nama role** — satu dokumen FSD mencakup
-> seluruh menu yang diakses role tersebut.
+> **Konvensi:** `modules[]` memuat satu **role/portal pengguna** per entry (mis.
+> `admin-ta`, `applicant`, `public`), masing-masing dengan guard dan kredensial
+> sendiri. Selector satu role menghasilkan satu FSD fokus role tersebut; selector
+> role yang dipisahkan koma menghasilkan **satu FSD lintas-role**. Role diurutkan
+> **leksikografis berdasarkan slug** (bukan urutan `modules[]` config, yang bisa
+> berubah bila proyek mengedit ulang urutan entry, dan bukan urutan prompt).
+
+| Prompt | Dokumen yang dibuat/diperbarui |
+|---|---|
+| `/fsd-doc admin-ta "Dashboard"` | `fsd-admin-ta.md` — hanya akses Admin TA |
+| `/fsd-doc applicant "Dashboard"` | `fsd-applicant.md` — hanya akses Applicant |
+| `/fsd-doc admin-ta,applicant "Dashboard"` | `fsd-admin-ta--applicant.md` — satu FSD untuk kedua role |
 
 - File baru → isi BAB I lalu BAB II.
 - File ada → menu ditambahkan sebagai BAB baru; BAB sebelumnya tidak diubah;
   Daftar Isi + Peta Menu (1.4) diperbarui.
+- Single-role mempertahankan nama file, sidecar, aset, dan output DOCX lama.
+  Dokumen role-set adalah scope baru; skill **tidak menggabungkan otomatis** FSD
+  single-role yang sudah ada.
+
+#### Keputusan bentuk menu lintas-role
+
+Sebelum menulis, `fsd-doc` memetakan route, guard, policy/query, komponen UI,
+data, endpoint, aksi, dan screenshot untuk **setiap role**. Nama menu atau UI
+saja tidak cukup. Hasilnya selalu salah satu berikut, tetap di satu dokumen:
+
+| Hasil discovery | Bentuk di FSD |
+|---|---|
+| **Unified** | Satu BAB dengan fungsi/alur bersama dan matriks role, permission, serta cakupan data. |
+| **Hybrid** | Satu BAB dengan konsep bersama, subbagian per role/kelompok, dan matriks lengkap. |
+| **Split chapters, single document** | BAB terpisah per varian/role karena tujuan atau alur berbeda material, tetap pada file role-set yang sama. |
+
+Screenshot disimpan dan diberi caption per role; permission harus dibuktikan pada
+visibilitas menu, akses rute langsung, cakupan data, widget/field, aksi, dan
+penegakan backend — bukan hanya tombol yang tersembunyi.
+
+### Memahami mode multi-role (v2.0.0)
+
+#### Apa yang dipilih oleh argumen pertama?
+
+Argumen pertama **bukan nama file bebas** dan bukan role baru. Ia adalah selector
+atas entry `modules[]` pada `doc-fsd.config.yml`:
+
+```yaml
+modules:
+  - slug: admin-ta
+    title: "TA Portal"
+    guard: "auth:admin-ta"
+    credentials: "docs/tasks/credentialRoles/admin-ta.md"
+  - slug: applicant
+    title: "Applicant Portal"
+    guard: "auth:applicant"
+    credentials: "docs/tasks/credentialRoles/applicant.md"
+```
+
+Berikut perilakunya:
+
+| Selector | Makna | Key dokumen | File Markdown |
+|---|---|---|---|
+| `admin-ta` | Hanya role Admin TA | `admin-ta` | `fsd-admin-ta.md` |
+| `applicant` | Hanya role Applicant | `applicant` | `fsd-applicant.md` |
+| `admin-ta,applicant` | Satu scope berisi Admin TA dan Applicant | `admin-ta--applicant` | `fsd-admin-ta--applicant.md` |
+
+Role harus ada di `modules[]`. Skill menghentikan proses **sebelum menulis file**
+apabila selector memiliki role tidak dikenal, token kosong (`admin-ta,,applicant`),
+atau role berulang (`admin-ta,admin-ta`). Slug role harus unik, stabil, dan tidak
+boleh mengandung `--` karena karakter itu dipakai sebagai separator key dokumen.
+
+#### Mengapa urutan selector tidak menentukan file baru?
+
+Skill mengurutkan role **leksikografis berdasarkan slug**, bukan urutan entry di
+`modules[]`. Dengan config di atas:
+
+```text
+admin-ta,applicant  → admin-ta--applicant
+applicant,admin-ta  → admin-ta--applicant
+```
+
+Ini mencegah dua dokumen yang isinya sama tetapi berbeda hanya karena urutan prompt
+**atau** karena `modules[]` di config diedit ulang urutannya — urutan array config
+bersifat mutable dan tidak dipakai sebagai identitas. Saat melanjutkan dokumen,
+gunakan role-set yang sama. Menambah atau mengurangi role adalah **scope baru**,
+bukan perubahan diam-diam pada dokumen lama.
+
+Bila `{document_key}` hasil urutan leksikografis tidak menemukan dokumen yang
+ada, tetapi ada dokumen lama dengan key hasil urutan `modules[]` lama (dari versi
+skill sebelum perbaikan ini) → skill **berhenti** dan meminta migrasi/rename
+eksplisit, bukan diam-diam membuat dokumen scope duplikat.
+
+#### Apa yang sebenarnya ada di satu FSD lintas-role?
+
+Satu file lintas-role tetap memiliki satu BAB I dan beberapa BAB menu. BAB I
+menjelaskan seluruh role/portal, guard, dan model akses umum. Setiap BAB menu
+secara eksplisit menyatakan role yang tercakup, rute per role, serta bentuk
+hasil discovery-nya.
+
+```text
+fsd-admin-ta--applicant.md
+├── BAB I    Informasi umum scope Admin TA + Applicant
+├── BAB II   Dashboard
+│   ├── fungsi/perilaku bersama
+│   ├── variasi Admin TA dan Applicant bila ada
+│   ├── matriks akses dan cakupan data
+│   └── screenshot serta bukti sumber per role
+├── BAB III  Notification
+└── ...
+```
+
+Bukan berarti dua halaman yang kebetulan bernama “Dashboard” selalu dipaksa
+menjadi satu BAB. Sebelum menulis, skill mencari bukti kode per role: posisi menu,
+redirect login, route, guard/middleware/policy, API/handler/query, scope data,
+kondisi UI, aksi, dan pesan sistem.
+
+| Kondisi yang terbukti | Keputusan | Hasil di dokumen tunggal |
+|---|---|---|
+| Tujuan bisnis, fungsi inti, dan pola alur utama sama | **Unified** | Satu BAB; perilaku bersama ditulis sekali, perbedaan ada pada matriks role. |
+| Konsep bersama, tetapi data, widget, aksi, atau alur tindak lanjut berbeda cukup besar | **Hybrid** | Satu BAB; konsep bersama + subbagian per role/kelompok + matriks lengkap. |
+| Yang sama hanya label menu, sedangkan tujuan/alur/domain data berbeda material | **Split chapters, single document** | BAB dipisah per varian/role, tetapi tetap di file `fsd-admin-ta--applicant.md`. |
+
+Contoh kasus **Dashboard**:
+
+```text
+Admin TA    : melihat ringkasan lowongan/kandidat → membuka tindak lanjut rekrutmen
+Applicant   : melihat ringkasan lamaran          → membuka tindak lanjut lamaran
+```
+
+Jika keduanya terbukti menjalankan pola “melihat ringkasan aktivitas lalu membuka
+tindak lanjut”, hasilnya umumnya **Unified** atau **Hybrid**. Sebaliknya, jika
+Dashboard Applicant sebenarnya wizard kelengkapan profil sedangkan Dashboard
+Admin TA adalah analitik operasional, hasil yang jujur adalah **Split chapters,
+single document**.
+
+#### Bagaimana permission dan screenshot dibuktikan?
+
+Setiap role masuk menggunakan `modules[].credentials` miliknya sendiri. Skill
+tidak boleh menyimpulkan hak Applicant dari sesi atau screenshot Admin TA.
+
+Perbedaan akses harus diperiksa dari enam lapisan berikut:
+
+1. visibilitas menu pada navigasi;
+2. akses URL/rute secara langsung (diizinkan, redirect, atau 403);
+3. cakupan data yang dapat dibaca;
+4. widget atau field yang muncul/disamarkan;
+5. aksi yang dapat dilakukan; dan
+6. penegakan backend melalui guard, policy, query scope, atau API.
+
+FSD menyajikan hasilnya sebagai matriks role. Contoh bentuknya:
+
+| Role | Menu | Rute | Cakupan Data | Widget / Aksi | Penegakan |
+|---|---|---|---|---|---|
+| Admin TA | Tampil | Diizinkan | Data rekrutmen organisasi | KPI lowongan, kelola lowongan | Guard + query organisasi |
+| Applicant | Tampil | Diizinkan | Data milik pengguna login | Status lamaran, buka detail | Guard + ownership scope |
+
+Screenshot dan diagram lintas-role disimpan di bawah key scope agar tidak saling
+timpa, misalnya:
+
+```text
+docs/tasks/fsd/assets/screenshots/
+└── admin-ta--applicant/
+    └── dashboard/
+        ├── admin-ta/
+        │   └── dash-overview.png
+        └── applicant/
+            └── dash-overview.png
+```
+
+Link gambar dalam Markdown dihitung relatif dari `output.documents_dir`; jangan
+menyalin pola `./images/` lama ke template override proyek.
+
+#### Melanjutkan, memigrasikan, atau memisahkan dokumen
+
+- Memakai selector single-role setelah pernah membuat selector multi-role tetap
+  membuat/memperbarui dokumen **berbeda**; ini normal karena scope-nya berbeda.
+- Skill tidak pernah menggabungkan otomatis `fsd-admin-ta.md` dan
+  `fsd-applicant.md`. Penggabungan otomatis dapat mencampur ID, screenshot,
+  klaim, dan source traceability yang konflik.
+- Untuk berpindah dari dua FSD lama ke satu FSD lintas-role, panggil selector
+  multi-role sebagai dokumen baru, lalu porting ulang hanya konten yang sudah
+  diverifikasi beserta source dan assetnya.
+- Bila sebuah menu ternyata Split, **jangan** membuat file baru per role. Pecah
+  BAB/varian di dalam FSD role-set yang sama.
 
 ### 3. Konversi ke .docx (salinan klien)
 
 ```
+# Mengonversi FSD khusus role
 /fsd-convert admin-ta
+
+# Mengonversi satu FSD lintas-role canonical
+/fsd-convert admin-ta,applicant
+# selector terbalik juga memilih sumber yang sama
+/fsd-convert applicant,admin-ta
 ```
 
-Output ber-brand sesuai `brand.*` config, pola nama `FSD-Modul-{Modul}`.
+`fsd-convert` menerapkan validasi dan canonicalization selector yang sama dengan
+`fsd-doc`; ia mencari satu sumber `fsd-{document_key}.md` dan memeriksa metadata
+scope di Markdown bila tersedia. Ia **tidak** menyatukan dua FSD single-role.
+
+Output ber-brand sesuai `brand.*` config. Single-role tetap memakai pola
+`FSD-Modul-{Modul}`; role-set menggunakan nama scope canonical, misalnya
+`FSD-Modul-Admin-Ta-Dan-Applicant.docx`.
 
 ---
 

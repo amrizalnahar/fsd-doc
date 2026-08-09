@@ -16,7 +16,10 @@ Brand (warna, font, label header) diambil dari doc-fsd.config.yml proyek:
     brand.color_accent        -> aksen sekunder (opsional)
     brand.font_heading / font_body
     project.name + project.client -> label header dokumen
-Bila config atau PyYAML tak ada, dipakai default netral di bawah.
+Bila config atau PyYAML tak ada, dipakai default netral di bawah. Warna yang
+diisi TAPI tidak berformat heksadesimal 6 digit ('#RRGGBB') menggagalkan
+skrip (exit 1) dengan pesan per field, SEBELUM reference.docx dibuat/ditimpa
+— bukan traceback ValueError di tengah proses dan bukan overwrite diam-diam.
 
 Jalankan:  py make-reference-docx.py                 # cari config otomatis
            DOC_FSD_CONFIG=/path/config.yml py make-reference-docx.py
@@ -24,6 +27,8 @@ Butuh   :  pip install python-docx   (pip install pyyaml untuk baca config)
 """
 
 import os
+import re
+import sys
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -31,11 +36,17 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
+HEX_RE = re.compile(r"^#?[0-9A-Fa-f]{6}$")
+
 
 # ---------------------------------------------------------------- config loader
 def _hex_to_rgb(h):
     h = str(h).lstrip("#")
     return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+
+
+def _is_valid_hex(value):
+    return bool(HEX_RE.match(str(value)))
 
 
 def _find_config():
@@ -84,8 +95,24 @@ def load_brand():
         return cfg
     brand = data.get("brand", {}) or {}
     project = data.get("project", {}) or {}
-    for k in ("color_primary", "color_primary_dark", "color_accent",
-              "font_heading", "font_body"):
+
+    invalid = []
+    for k in ("color_primary", "color_primary_dark", "color_accent"):
+        if brand.get(k):
+            if _is_valid_hex(brand[k]):
+                cfg[k] = brand[k]
+            else:
+                invalid.append((k, brand[k]))
+    if invalid:
+        print(f"[x] {len(invalid)} warna brand tidak valid di {path}:", file=sys.stderr)
+        for k, v in invalid:
+            print(f"    - brand.{k} ('{v}'): harus format heksadesimal 6 digit, "
+                  "mis. '#005BAA'.", file=sys.stderr)
+        print("[x] reference.docx TIDAK dibuat/ditimpa — perbaiki warna di config "
+              "lalu jalankan ulang.", file=sys.stderr)
+        sys.exit(1)
+
+    for k in ("font_heading", "font_body"):
         if brand.get(k):
             cfg[k] = brand[k]
     name = project.get("name")
