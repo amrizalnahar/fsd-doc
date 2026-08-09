@@ -1,9 +1,11 @@
 ---
 # METADATA SAMPUL (.docx) — WAJIB di baris paling atas. Pandoc merender
 # title/subtitle/author/date pada halaman sampul; field lain informatif.
+# `scope_key` dan `scope_roles` adalah metadata internal untuk memverifikasi
+# selector lintas-role saat konversi; hapus placeholder role kedua bila single-role.
 # Isi placeholder sebelum konversi. Aturan pemakaian lengkap: lihat SKILL.md.
 title: "Functional Specification Document"
-subtitle: "{{Nama Modul}} — {{project.name}}"
+subtitle: "{{Nama Scope}} — {{project.name}}"
 author:
   - "Versi {{1.0}}"
   - "Disusun oleh {{project.vendor}} untuk {{project.client}}"
@@ -11,25 +13,37 @@ date: "{{DD Bulan YYYY}}"
 lang: "{{project.language}}"
 status: "Menggambarkan fungsi yang sudah berjalan pada sistem"
 confidentiality: "{{project.confidentiality}}"
+scope_key: "{{document_key}}"
+scope_roles:
+  - "{{role-1}}"
+  - "{{role-2 (hapus bila single-role)}}"
 ---
 
-<!-- TEMPLATE MASTER FSD — satu dokumen = satu MODUL (semua menunya).
+<!-- TEMPLATE MASTER FSD — satu dokumen = satu SCOPE ROLE/PORTAL (semua menunya).
+     Scope dapat satu role atau beberapa role yang dipilih `/fsd-doc` lewat koma.
      Ini KERANGKA saja. Aturan pemakaian (prinsip FSD, Aturan #1/sumber,
-     konvensi ID, render Mermaid, konversi .docx, standar ERD) ada di SKILL.md
-     dan TIDAK diulang di sini. Isi tiap {{PLACEHOLDER}}, hapus baris
-     "(contoh — ganti)", dan hapus komentar panduan setelah bagian terisi.
-     Menu baru = salin blok BAB II, naikkan nomor bab/sub-bab, ganti {{PREFIX}}. -->
+     konvensi ID, keputusan Unified/Hybrid/Split, render Mermaid, konversi .docx,
+     standar ERD) ada di SKILL.md dan TIDAK diulang di sini. Isi tiap
+     {{PLACEHOLDER}}, hapus baris "(contoh — ganti)", dan hapus komentar panduan
+     setelah bagian terisi. Menu baru = salin blok BAB II, naikkan nomor
+     bab/sub-bab, ganti {{PREFIX}}. Bila discovery memutuskan Split, buat BAB
+     eksplisit per varian/role tetapi tetap dalam dokumen scope yang sama. -->
 
-# Master Functional Specification Document — {{Nama Modul}}
+# Master Functional Specification Document — {{Nama Scope}}
 
 **Aplikasi:** {{project.name}}
-**Modul:** {{Nama Modul — dari modules[].title pada doc-fsd.config.yml}}
+**Scope role/portal:** {{Nama Scope — title role dari modules[]}}
+**Role canonical:** {{role-1[, role-2, ...]}}
 **Versi dokumen:** {{1.0}}
 **Tanggal:** {{DD Bulan YYYY}}
 **Status:** Menggambarkan fungsi yang sudah berjalan pada sistem
 **Perubahan versi ini:** {{ringkas perubahan dari versi sebelumnya; versi 1.0 → "Versi awal."}}
 
-Dokumen ini adalah spesifikasi fungsional **seluruh menu** pada {{Nama Modul}} {{project.name}}. Disusun untuk verifikasi fungsional (UAT) bersama klien: menjelaskan **apa** yang dilakukan sistem dan **mengapa**, bukan detail teknis. Detail teknis dikumpulkan pada sub-bab Lampiran Teknis di ujung setiap bab menu.
+Dokumen ini adalah spesifikasi fungsional **seluruh menu** pada scope
+{{Nama Scope}} di {{project.name}}. Disusun untuk verifikasi fungsional (UAT)
+bersama klien: menjelaskan **apa** yang dilakukan sistem dan **mengapa**, bukan
+detail teknis. Detail teknis dikumpulkan pada sub-bab Lampiran Teknis di ujung
+setiap bab menu.
 
 ---
 
@@ -38,7 +52,7 @@ Dokumen ini adalah spesifikasi fungsional **seluruh menu** pada {{Nama Modul}} {
 
 ## Daftar Isi
 
-**BAB I — Informasi Umum Modul**
+**BAB I — Informasi Umum Scope Role/Portal**
 
 - 1.1 [Pendahuluan](#11-pendahuluan)
 - 1.2 [Glosarium & Istilah](#12-glosarium--istilah)
@@ -63,15 +77,16 @@ Dokumen ini adalah spesifikasi fungsional **seluruh menu** pada {{Nama Modul}} {
 ---
 ---
 
-# BAB I — INFORMASI UMUM PORTAL
+# BAB I — INFORMASI UMUM SCOPE ROLE/PORTAL
 
-<!-- Diisi SEKALI untuk seluruh modul; jadi acuan semua bab menu. Jangan diulang. -->
+<!-- Diisi SEKALI untuk seluruh scope role; jadi acuan semua bab menu. Jangan
+     diulang. Untuk satu role, scope tetap memakai bentuk ringkas. -->
 
 ## 1.1 Pendahuluan
 
 ### 1.1.1 Tujuan Dokumen
 
-Dokumen ini menjelaskan spesifikasi fungsional seluruh menu pada **{{Nama Modul}}** {{project.name}}: {{satu-dua kalimat merangkum siapa pengguna modul ini dan apa tujuan utama mereka menggunakannya}}.
+Dokumen ini menjelaskan spesifikasi fungsional seluruh menu pada scope **{{Nama Scope}}** di {{project.name}}: {{satu-dua kalimat merangkum role/portal yang tercakup dan tujuan utama mereka menggunakannya}}.
 
 Dokumen ditulis untuk kebutuhan verifikasi fungsional bersama klien — menjelaskan **apa** yang dilakukan sistem dan **mengapa**, bukan bagaimana sistem dibangun secara teknis.
 
@@ -79,12 +94,13 @@ Dokumen ditulis untuk kebutuhan verifikasi fungsional bersama klien — menjelas
 
 Termasuk dalam ruang lingkup dokumen ini:
 
-- Seluruh menu {{Nama Modul}} yang tercantum pada **Peta Menu (sub-bab 1.4)**.
+- Seluruh menu {{Nama Scope}} yang tercantum pada **Peta Menu (sub-bab 1.4)**.
+- Role/profil akses yang disebutkan pada setiap bab dan matriks aksesnya.
 - {{tambahkan cakupan lintas-menu tingkat tinggi bila perlu}}
 
 Tidak termasuk dalam ruang lingkup dokumen ini:
 
-- Menu pada modul lain — lihat dokumen master masing-masing (mis. `fsd-master-{{modul-lain}}.md`).
+- Menu di luar scope role/portal ini — lihat dokumen master scope terkait (mis. `fsd-{{role-scope-lain}}.md`).
 - Spesifikasi teknis (struktur basis data, antarmuka program, arsitektur sistem) selain yang tercantum pada sub-bab Lampiran Teknis tiap bab.
 - {{fitur/alur lain yang sengaja dikecualikan — sebut dokumennya}}
 
@@ -102,7 +118,7 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 
 ## 1.2 Glosarium & Istilah
 
-<!-- Istilah yang dipakai LINTAS menu di modul ini. Istilah khas satu menu →
+<!-- Istilah yang dipakai LINTAS menu di scope ini. Istilah khas satu menu →
      letakkan di "Gambaran Umum" bab menu itu. -->
 
 | Istilah | Definisi |
@@ -116,15 +132,20 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 ## 1.3 Peran & Hak Akses Umum
 
 <!-- Jelaskan model hak akses (RBAC/capability/peran/grup) SATU KALI untuk
-     seluruh modul; bab menu cukup merujuk ke sini + capability khusus menunya. -->
+     seluruh scope; bab menu cukup merujuk ke sini + capability khusus menunya. -->
 
-### 1.3.1 Sesi & Guard Modul
+### 1.3.1 Sesi, Portal, & Guard Role
 
-{{Jelaskan cara pengguna masuk ke modul ini: guard/otentikasi, syarat status akun (mis. verified/aktif), dan batasan akses tingkat modul. Contoh: "Modul diakses dengan sesi <peran> (guard `<guard>`); pengguna harus terverifikasi dan berstatus aktif."}}
+{{Jelaskan hanya perilaku autentikasi yang terbukti di kode. Untuk satu role, satu baris cukup. Untuk scope lintas-role, isi satu baris per role/profil dan jangan menganggap guard atau cakupan data sama.}}
+
+| Profil Akses / Role | Portal | Guard | Sesi & Cakupan Umum |
+|---|---|---|---|
+| {{role-1}} | {{frontend/backend}} | `{{guard}}` | {{syarat sesi/status akun dan cakupan umum yang terbukti}} |
+| {{role-2 (opsional)}} | {{frontend/backend}} | `{{guard}}` | {{syarat sesi/status akun dan cakupan umum yang terbukti}} |
 
 ### 1.3.2 Model Hak Akses
 
-{{Jelaskan bagaimana hak akses diberikan pada modul ini — mis. per-menu capability, peran, atau grup. Jelaskan pola umum "Lihat / Tambah / Ubah / Hapus" bila berlaku, dan bagaimana ketiadaan hak memengaruhi tampilan (menu tidak muncul, tombol tersembunyi, halaman 403).}}
+{{Jelaskan bagaimana hak akses diberikan pada scope ini — mis. per-menu capability, peran, atau grup. Jelaskan pola umum "Lihat / Tambah / Ubah / Hapus" bila berlaku, dan bagaimana ketiadaan hak memengaruhi tampilan (menu tidak muncul, tombol tersembunyi, halaman 403).}}
 
 | Hak Akses (umum) | Kemampuan yang Diberikan |
 |---|---|
@@ -133,27 +154,27 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 | **Ubah** | {{Menampilkan menu Edit dan menyimpan perubahan}} |
 | **Hapus** | {{Menampilkan tombol Hapus dan menghapus/mengarsipkan data}} |
 
-<!-- Bila modul tidak memakai pola Lihat/Tambah/Ubah/Hapus, ganti tabel ini
+<!-- Bila scope tidak memakai pola Lihat/Tambah/Ubah/Hapus, ganti tabel ini
      dengan model yang sesuai. -->
 
 ### 1.3.3 Audit Log (berlaku umum)
 
-{{Bila seluruh perubahan tercatat pada Audit Log, nyatakan sekali di sini: pendaftaran, perubahan, dan penghapusan tercatat beserta identitas pelaku dan waktu kejadian. Tiap bab menu cukup merujuk ke sub-bab ini. Hapus bila tidak relevan untuk modul ini.}}
+{{Bila seluruh perubahan tercatat pada Audit Log, nyatakan sekali di sini: pendaftaran, perubahan, dan penghapusan tercatat beserta identitas pelaku dan waktu kejadian. Tiap bab menu cukup merujuk ke sub-bab ini. Hapus bila tidak relevan untuk scope ini.}}
 
 ---
 
 ## 1.4 Peta Menu & Pelacak Progres
 
-<!-- Daftar SELURUH menu modul + prefix ID + status dokumentasi. Berfungsi
+<!-- Daftar SELURUH menu scope + prefix ID + status dokumentasi. Berfungsi
      sebagai daftar-isi hidup + pelacak sekuensial. Perbarui kolom Status tiap
      bab selesai. Status: Belum / Draf / Selesai (lihat keterangan di bawah). -->
 
-| Bab | Menu | Prefix ID | Rute / Lokasi | Status Dokumentasi |
-|---|---|---|---|---|
-| II | {{Search Vacancy}} (contoh — ganti) | {{SV}} | {{/pekerjaan}} | {{Belum / Draf / Selesai}} |
-| III | {{My Application}} (contoh — ganti) | {{MA}} | {{/lamaran}} | {{Belum}} |
-| IV | {{Saved Job}} (contoh — ganti) | {{SJ}} | {{/tersimpan}} | {{Belum}} |
-| … | {{…}} | {{…}} | {{…}} | {{…}} |
+| Bab | Menu | Role / Profil Akses | Bentuk Dokumentasi | Prefix ID | Rute / Lokasi | Status Dokumentasi |
+|---|---|---|---|---|---|---|
+| II | {{Search Vacancy}} (contoh — ganti) | {{role-1, role-2}} | {{Unified / Hybrid / Split}} | {{SV}} | {{/pekerjaan}} | {{Belum / Draf / Selesai}} |
+| III | {{My Application}} (contoh — ganti) | {{role-2}} | {{Role-specific}} | {{MA}} | {{/lamaran}} | {{Belum}} |
+| IV | {{Saved Job}} (contoh — ganti) | {{role-2}} | {{Role-specific}} | {{SJ}} | {{/tersimpan}} | {{Belum}} |
+| … | {{…}} | {{…}} | {{…}} | {{…}} | {{…}} | {{…}} |
 
 **Keterangan status:** *Belum* = belum digarap · *Draf* = sedang diisi / masih ada klaim tanpa sumber · *Selesai* = lengkap & SETIAP klaim tertaut sumber (lihat Matriks Keterlacakan .10.3) atau ditandai *TIDAK TERVERIFIKASI*.
 
@@ -168,21 +189,31 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 
 # BAB II — MENU: {{Nama Menu Pertama}}
 
-**Prefix ID menu:** `{{PREFIX}}` — **Rute:** {{/rute-menu}}
-**Perubahan versi ini:** {{ringkas; untuk versi awal tulis "Versi awal."}}
+| Metadata | Nilai |
+|---|---|
+| Prefix ID menu | `{{PREFIX}}` |
+| Role / profil akses | {{role-1[, role-2, ...]}} |
+| Keputusan scope | {{Unified / Hybrid / Split chapters, single document}} |
+| Rute per role | {{role-1: /rute; role-2: /rute-bila-berbeda}} |
+| Perubahan versi ini | {{ringkas; untuk versi awal tulis "Versi awal."}} |
+
+<!-- Putuskan bentuk bab dari peta sumber per role sebelum menulis:
+     Unified = fungsi inti dan alur bersama, variasi pada matriks role;
+     Hybrid = konsep bersama + subbagian per role/kelompok;
+     Split = BAB eksplisit per varian/role, tetapi tetap di dokumen scope ini. -->
 
 ---
 
 ## 2.1 Gambaran Umum & Posisi Menu
 
-**Posisi dalam aplikasi.** Menu ini berada pada {{lokasi menu — mis. "menu utama X di sidebar" / "submenu Y di bawah Z"}} pada {{Nama Modul}}, dengan rute `{{/rute}}`. {{Kondisi kemunculan menu, mis. "Menu hanya muncul bagi pengguna yang memiliki hak akses menu ini."}}
+**Posisi dalam aplikasi.** Menu ini berada pada {{lokasi menu — mis. "menu utama X di sidebar" / "submenu Y di bawah Z"}} pada {{Nama Scope}}, dengan rute `{{/rute per role bila berbeda}}`. {{Kondisi kemunculan menu dan role/profil yang berlaku, mis. "Menu hanya muncul bagi pengguna yang memiliki hak akses menu ini."}}
 
 **Konsep dasar.** {{Jelaskan model mental inti menu dalam 1–3 paragraf: entitas utama, apa yang disimpan/diatur sistem, dan prinsip pentingnya. Fokus pada makna bisnis, bukan teknis.}}
 
 <!-- Opsional: bila alur peran↔sistem memperjelas konsep, sisipkan diagram PNG
      hasil render Mermaid (cara render → SKILL.md). Hapus bila tidak perlu. -->
 
-![{{Diagram interaksi peran & sistem}}](<./images/{{prefix}}-diagram-alur.png>)
+![{{Diagram interaksi peran & sistem}}](<{{path-relatif-ke-diagram}}>)
 
 *Gambar {{2.x}} — {{ringkas interaksi antar-peran/sistem pada menu ini}}.*
 
@@ -208,17 +239,19 @@ Tidak termasuk dalam ruang lingkup dokumen ini:
 <!-- Satu baris per fungsi yang BENAR-BENAR ADA (terbukti di kode). Urutkan
      mengikuti alur pemakaian. Selaraskan ID dengan 2.4, 2.6, 2.7. Beri komentar
      sumber (<!-- Source: file.ext:baris -->) di dekat tiap baris. Tanpa sumber →
-     tandai "TIDAK TERVERIFIKASI", jangan dicantumkan. Detail aturan → SKILL.md. -->
+     tandai "TIDAK TERVERIFIKASI", jangan dicantumkan. Untuk fungsi bersama,
+     gunakan satu ID dan semua role terkait. Bila perilaku berbeda, jelaskan
+     eksplisit per role/subbagian, jangan menduplikasi klaim umum. -->
 
-| ID | Nama Fungsi | Keterangan |
-|---|---|---|
-| {{PREFIX}}-01 | {{Melihat daftar ...}} | {{Keterangan singkat}} |
-| {{PREFIX}}-02 | {{Mencari ...}} | {{Keterangan}} |
-| {{PREFIX}}-03 | {{Menyaring berdasarkan ...}} | {{Keterangan}} |
-| {{PREFIX}}-04 | {{Mendaftarkan / menambah ...}} | {{Keterangan}} |
-| {{PREFIX}}-05 | {{Mengubah ...}} | {{Keterangan}} |
-| {{PREFIX}}-06 | {{Menghapus / menonaktifkan ...}} | {{Keterangan}} |
-| {{PREFIX}}-07 | {{Proses lanjutan ...}} | {{Keterangan}} |
+| ID | Nama Fungsi | Role / Profil Berlaku | Keterangan |
+|---|---|---|---|
+| {{PREFIX}}-01 | {{Melihat daftar ...}} | {{semua / role tertentu}} | {{Keterangan singkat}} |
+| {{PREFIX}}-02 | {{Mencari ...}} | {{role tertentu}} | {{Keterangan}} |
+| {{PREFIX}}-03 | {{Menyaring berdasarkan ...}} | {{role tertentu}} | {{Keterangan}} |
+| {{PREFIX}}-04 | {{Mendaftarkan / menambah ...}} | {{role tertentu}} | {{Keterangan}} |
+| {{PREFIX}}-05 | {{Mengubah ...}} | {{role tertentu}} | {{Keterangan}} |
+| {{PREFIX}}-06 | {{Menghapus / menonaktifkan ...}} | {{role tertentu}} | {{Keterangan}} |
+| {{PREFIX}}-07 | {{Proses lanjutan ...}} | {{role tertentu}} | {{Keterangan}} |
 
 ---
 
@@ -265,41 +298,37 @@ Notasi: **W** = wajib diisi, **O** = opsional.
      ID ber-prefix menu. Beri komentar sumber di dekat tiap baris; tanpa sumber →
      "TIDAK TERVERIFIKASI". -->
 
-| ID | Aturan | Penjelasan |
-|---|---|---|
-| {{PREFIX}}-BR-01 | **{{Aturan singkat, mis. Nama tidak boleh ganda}}** | {{Penjelasan + kondisi berlakunya}} |
-| {{PREFIX}}-BR-02 | **{{Aturan validasi}}** | {{Penjelasan}} |
-| {{PREFIX}}-BR-03 | **{{Aturan hak akses / visibilitas}}** | {{Penjelasan}} |
-| {{PREFIX}}-BR-04 | **{{Aturan penghapusan / arsip}}** | {{Penjelasan}} |
-| {{PREFIX}}-BR-05 | **{{Aturan notifikasi}}** | {{Penjelasan}} |
+| ID | Aturan | Role / Profil Berlaku | Penjelasan |
+|---|---|---|---|
+| {{PREFIX}}-BR-01 | **{{Aturan singkat, mis. Nama tidak boleh ganda}}** | {{semua / role tertentu}} | {{Penjelasan + kondisi berlakunya}} |
+| {{PREFIX}}-BR-02 | **{{Aturan validasi}}** | {{role tertentu}} | {{Penjelasan}} |
+| {{PREFIX}}-BR-03 | **{{Aturan hak akses / visibilitas}}** | {{role tertentu}} | {{Penjelasan}} |
+| {{PREFIX}}-BR-04 | **{{Aturan penghapusan / arsip}}** | {{role tertentu}} | {{Penjelasan}} |
+| {{PREFIX}}-BR-05 | **{{Aturan notifikasi}}** | {{role tertentu}} | {{Penjelasan}} |
 
 ---
 
-## 2.5 Hak Akses (Khusus Menu)
+## 2.5 Hak Akses & Cakupan Data (Khusus Menu)
 
-<!-- JANGAN ulang model hak akses umum (sub-bab 1.3). Di sini hanya capability
-     KHUSUS menu ini + perilaku antarmuka spesifik. Ikut pola umum → cukup rujuk 1.3. -->
+<!-- JANGAN ulang model hak akses umum (sub-bab 1.3). Di sini hanya capability,
+     scope data, dan perilaku antarmuka KHUSUS menu ini. Untuk scope lintas-role,
+     perbedaan tampilan BUKAN bukti izin: verifikasi menu, route, data, aksi, dan
+     penegakan backend melalui guard/policy/query/API. Pecah menjadi tabel akses,
+     data, widget, dan aksi bila banyak role membuat tabel terlalu lebar di DOCX. -->
 
-Mengacu pada model hak akses modul (sub-bab 1.3). Khusus menu ini:
+Mengacu pada model hak akses scope (sub-bab 1.3). Khusus menu ini:
 
-| Hak Akses | Kemampuan yang Diberikan |
-|---|---|
-| **{{Hak / capability menu, mis. `saved-job`}}** | {{Kemampuan yang diberikan pada menu ini}} |
+| Role / Profil | Menu | Rute Langsung | Cakupan Data | Widget / Field | Aksi | Penegakan & Bukti |
+|---|---|---|---|---|---|---|
+| {{role-1}} | {{tampil/sembunyi}} | {{izin/403/redirect}} | {{data yang boleh terlihat}} | {{elemen yang terlihat/masked}} | {{aksi yang tersedia}} | {{guard/policy/query/API + Source}} |
+| {{role-2 (opsional)}} | {{tampil/sembunyi}} | {{izin/403/redirect}} | {{data yang boleh terlihat}} | {{elemen yang terlihat/masked}} | {{aksi yang tersedia}} | {{guard/policy/query/API + Source}} |
 
-**Perilaku antarmuka berdasarkan hak akses:**
+<!-- Bukti hak akses (opsional, disarankan untuk UAT): screenshot setiap role,
+     tanpa hak, atau halaman penolakan. Link harus relatif dari documents_dir. -->
 
-| Kondisi Pengguna | Yang Terjadi di Layar |
-|---|---|
-| {{Tidak punya hak "Lihat"}} | {{Menu tidak muncul; halaman tidak dapat diakses (mis. 403)}} |
-| {{Punya "Lihat" saja}} | {{Daftar tampil; tombol/menu tertentu tidak ada}} |
-| {{Punya hak khusus menu}} | {{Elemen tambahan muncul}} |
+![{{Bukti hak akses}}](<{{path-relatif-ke-aset}}>)
 
-<!-- Bukti hak akses (opsional, disarankan untuk UAT): screenshot tanpa hak &
-     halaman penolakan. Hapus bila tidak dipakai. -->
-
-![{{Bukti hak akses}}](<./images/{{prefix}}-hak-akses.png>)
-
-*Gambar {{2.x}} — {{Keterangan bukti hak akses}}.*
+*Gambar {{2.x}} — {{Role/profil yang diuji dan keterangan bukti hak akses}}.*
 
 ---
 
@@ -315,15 +344,15 @@ Mengacu pada model hak akses modul (sub-bab 1.3). Khusus menu ini:
      render Mermaid (flowchart + subgraph per peran, atau sequenceDiagram). Cara
      render + contoh kode → SKILL.md. Hapus blok gambar bila alur cukup teks. -->
 
-![{{Diagram alur ...}}](<./images/{{prefix}}-alur-{topik}.png>)
+![{{Diagram alur ...}}](<{{path-relatif-ke-diagram}}>)
 
 *Gambar {{2.x}} — Diagram alur {{ringkas alur yang digambarkan}}.*
 
 <!-- Langkah: daftar bernomor. Percabangan pakai sub-butir (indentasi), BUKAN
      ASCII. Cantumkan titik validasi & pesan; selaraskan dengan 2.7. -->
 
-1. Pengguna membuka menu {{Nama Menu}} (`{{/rute}}`).
-2. {{langkah}}.
+1. {{Role/profil}} membuka menu {{Nama Menu}} (`{{/rute role terkait}}`).
+2. {{langkah; sebut role bila perilaku berbeda}}.
 3. Pengguna dapat:
    - {{cabang aksi A}} → {{hasil}}
    - {{cabang aksi B}} → {{hasil}}
@@ -360,16 +389,17 @@ Mengacu pada model hak akses modul (sub-bab 1.3). Khusus menu ini:
 
 ## 2.8 Antarmuka Pengguna
 
-Seluruh tangkapan layar diambil langsung dari {{runtime.target_url — dari doc-fsd.config.yml}} pada {{DD Bulan YYYY}} dengan bahasa antarmuka **{{project.language}}** dan akun {{peran/hak yang dipakai}}. Isi datanya adalah data lingkungan uji.
+Seluruh tangkapan layar diambil langsung dari {{runtime.target_url — dari doc-fsd.config.yml}} pada {{DD Bulan YYYY}} dengan bahasa antarmuka **{{project.language}}**. Setiap caption wajib menyebut role/profil dan sesi yang dipakai; isi data adalah data lingkungan uji.
 
-<!-- Screenshot diambil via agent-browser (cara → SKILL.md §4). Simpan di
-     ./images/ (boleh subfolder per menu), nama {{prefix}}-{topik}.png. -->
+<!-- Screenshot diambil via agent-browser (cara → SKILL.md §4). Simpan per scope,
+     menu, dan role; gunakan link relatif dari output.documents_dir, bukan folder gambar hard-coded.
+     Ambil bukti terpisah untuk tiap role yang dicakup. -->
 
-### 2.8.1 Halaman Daftar / Utama
+### 2.8.1 Halaman Utama — {{Role / Profil Akses}}
 
-![{{Halaman utama menu}}](<./images/{{prefix}}-daftar.png>)
+![{{Halaman utama menu}}](<{{path-relatif-ke-screenshot-role}}>)
 
-*Gambar {{2.x}} — {{Keterangan halaman + hal yang perlu diperhatikan}}.*
+*Gambar {{2.x}} — {{Role/profil akses}}: {{Keterangan halaman + hal yang perlu diperhatikan}}.*
 
 | Elemen | Perilaku |
 |---|---|
@@ -378,11 +408,11 @@ Seluruh tangkapan layar diambil langsung dari {{runtime.target_url — dari doc-
 | Menu aksi | {{Berisi Edit/Hapus sesuai hak akses}} |
 | Kondisi tampilan | {{Apakah pencarian/penyaringan/urutan/halaman tersimpan di URL}} |
 
-### 2.8.2 Halaman Tambah / Ubah / Detail
+### 2.8.2 Halaman Tambah / Ubah / Detail — {{Role / Profil Akses}}
 
-![{{Halaman tambah/ubah/detail}}](<./images/{{prefix}}-detail.png>)
+![{{Halaman tambah/ubah/detail}}](<{{path-relatif-ke-screenshot-role}}>)
 
-*Gambar {{2.x}} — {{Keterangan tata letak}}.*
+*Gambar {{2.x}} — {{Role/profil akses}}: {{Keterangan tata letak}}.*
 
 | Elemen | Perilaku |
 |---|---|
@@ -394,13 +424,13 @@ Seluruh tangkapan layar diambil langsung dari {{runtime.target_url — dari doc-
 
 ## 2.9 Keterkaitan dengan Menu Lain
 
-<!-- Satu baris per menu/modul terkait. Jelaskan arah & sifat keterkaitan dari
+<!-- Satu baris per menu/scope terkait. Jelaskan arah & sifat keterkaitan dari
      sudut pandang bisnis. Rujuk bab terkait (mis. "lihat BAB III") atau master lain. -->
 
-| Menu / Modul Terkait | Sifat Keterkaitan |
+| Menu / Scope Terkait | Sifat Keterkaitan |
 |---|---|
 | {{Master Data / Referensi}} | {{Data referensi apa yang dipakai menu ini}} |
-| {{Menu lain di modul ini (BAB ...)}} | {{Apa yang dibagikan / dipicu}} |
+| {{Menu lain di scope ini (BAB ...)}} | {{Apa yang dibagikan / dipicu}} |
 | Notifikasi | {{Kejadian yang memicu notifikasi, ke siapa}} |
 | Audit Log | {{Lihat sub-bab 1.3.3 — perubahan pada menu ini tercatat}} |
 
@@ -417,7 +447,8 @@ Sub-bab ini ditujukan bagi tim pengembang & penguji. Memuat struktur data (ERD) 
 Memperlihatkan tabel basis data ({{codebase.backend.db}}) yang dipakai menu ini beserta relasinya. Sumber kebenaran adalah migrasi & model backend (lihat `codebase.backend.migrations` dan `codebase.backend.models` pada doc-fsd.config.yml).
 
 <!-- ERD = Mermaid `erDiagram` (BUKAN flowchart/gambar/tabel), disimpan ke
-     ./images/{{prefix}}-erd.mmd lalu dirender ke .png. STANDAR SERAGAM lengkap
+     path aset relatif yang dihitung dari output.documents_dir lalu dirender ke PNG.
+     STANDAR SERAGAM lengkap
      (dua kategori tabel, styling hanya garis-tepi, kolom kunci, crow's foot)
      ada di SKILL.md §6 — ikuti persis. Kerangka .mmd baku:
 
@@ -438,7 +469,7 @@ erDiagram
     style {{tabel_terkait}} stroke:#9AA7B4,stroke-width:1px
 -->
 
-![{{ERD menu}}](<./images/{{prefix}}-erd.png>)
+![{{ERD menu}}](<{{path-relatif-ke-erd}}>)
 
 *Gambar {{2.x}} — ERD menu {{Nama Menu}} (mermaid `erDiagram`). Tabel bergaris tepi tebal berwarna = tabel utama/inti menu ini; tabel bergaris tepi abu tipis = tabel relasi/terkait. Notasi crow's foot (`||--o{`) menandai relasi satu-ke-banyak.*
 
@@ -450,12 +481,12 @@ Kontrak endpoint yang menopang menu ini — acuan bagi developer & QA. Untuk Adm
      capability (rujuk 1.3 & 2.5). Cukup parameter/field KUNCI. Selaraskan kolom
      "Terkait Fungsi" dengan ID pada 2.2. -->
 
-| Method | Path / Rute | Guard · Capability | Tujuan | Parameter / Field Kunci | Terkait Fungsi |
-|---|---|---|---|---|---|
-| {{GET}} | {{/rute}} | {{auth:... · capability}} | {{Menampilkan daftar}} | {{page, q, filter[...]}} | {{PREFIX-01}} |
-| {{POST}} | {{/rute}} | {{auth:... · capability}} | {{Menyimpan data baru}} | {{field wajib}} | {{PREFIX-04}} |
-| {{PUT/PATCH}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Mengubah data}} | {{field yang diubah}} | {{PREFIX-05}} |
-| {{DELETE}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Menghapus / menonaktifkan}} | {{id}} | {{PREFIX-06}} |
+| Role / Profil | Method | Path / Rute | Guard · Capability | Tujuan | Parameter / Field Kunci | Terkait Fungsi |
+|---|---|---|---|---|---|---|
+| {{role terkait}} | {{GET}} | {{/rute}} | {{auth:... · capability}} | {{Menampilkan daftar}} | {{page, q, filter[...]}} | {{PREFIX-01}} |
+| {{role terkait}} | {{POST}} | {{/rute}} | {{auth:... · capability}} | {{Menyimpan data baru}} | {{field wajib}} | {{PREFIX-04}} |
+| {{role terkait}} | {{PUT/PATCH}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Mengubah data}} | {{field yang diubah}} | {{PREFIX-05}} |
+| {{role terkait}} | {{DELETE}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Menghapus / menonaktifkan}} | {{id}} | {{PREFIX-06}} |
 
 <!-- INTERNAL:START - sub-bab ini DIPANGKAS saat /fsd-convert; TIDAK ikut ke .docx klien -->
 ### 2.10.3 Matriks Keterlacakan (Traceability)
@@ -470,12 +501,12 @@ kode — bukti bahwa dokumen ini menggambarkan perilaku nyata, bukan asumsi.
      developer. Bab hanya "Selesai" bila tabel ini tak menyisakan baris tanpa
      sumber yang belum ditandai. -->
 
-| ID | Perilaku Singkat | Sumber (file:baris) | Status |
-|---|---|---|---|
-| {{PREFIX}}-01 | {{Melihat daftar ...}} | {{app/Http/Controllers/XController.php:42}} | Terverifikasi |
-| {{PREFIX}}-04 | {{Menambah ...}} | {{app/Http/Requests/StoreXRequest.php:20}} | Terverifikasi |
-| {{PREFIX}}-BR-01 | {{Nama tidak boleh ganda}} | {{database/migrations/2024_..._create_x.php (unique)}} | Terverifikasi |
-| {{PREFIX}}-BR-05 | {{Notifikasi ...}} | {{—}} | TIDAK TERVERIFIKASI |
+| ID | Role / Profil Berlaku | Perilaku Singkat | Sumber (file:baris) | Status |
+|---|---|---|---|---|
+| {{PREFIX}}-01 | {{semua / role tertentu}} | {{Melihat daftar ...}} | {{app/Http/Controllers/XController.php:42}} | Terverifikasi |
+| {{PREFIX}}-04 | {{role tertentu}} | {{Menambah ...}} | {{app/Http/Requests/StoreXRequest.php:20}} | Terverifikasi |
+| {{PREFIX}}-BR-01 | {{role tertentu}} | {{Nama tidak boleh ganda}} | {{database/migrations/2024_..._create_x.php (unique)}} | Terverifikasi |
+| {{PREFIX}}-BR-05 | {{role tertentu}} | {{Notifikasi ...}} | {{—}} | TIDAK TERVERIFIKASI |
 <!-- INTERNAL:END -->
 
 ---
