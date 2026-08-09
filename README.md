@@ -11,8 +11,8 @@ klien/UAT.
 | Skill | Command | Fungsi |
 |---|---|---|
 | `fsd-init` | `/fsd-init` | Bootstrap `doc-fsd.config.yml` + folder output (wawancara gap saja). |
-| `fsd-doc` | `/fsd-doc <role[,role...]> "<Nama Menu>"` | Tulis/lanjutkan FSD satu role atau satu scope lintas-role: tambah BAB menu baru. Mode utama. |
-| `fsd-convert` | `/fsd-convert <role[,role...]>` | Konversi `.md` scope role → `.docx` ber-brand (salinan klien). |
+| `fsd-doc` | `/fsd-doc <role[,role...]>` | Launcher untuk membuat/membuka FSD Single Menu atau Parent Menu/Modul; command kompatibel `/fsd-doc <role[,role...]> "<Nama Menu>"` tetap mengelola FSD scope multi-menu legacy. |
+| `fsd-convert` | `/fsd-convert <role[,role...]> ["<Nama FSD>"]` | Konversi satu FSD terpilih menjadi `.docx` ber-brand (salinan klien). |
 
 Berdiri sendiri: **tidak** butuh skill `tca-*`. Satu dependensi opsional
 (`agent-browser`, pasang dengan `npx skills add vercel-labs/agent-browser`) untuk
@@ -53,7 +53,9 @@ doc-fsd/                              # root repo = paket 3 skill
     ├── fsd-doc/
     │   ├── SKILL.md                 # instruksi generator (mode utama)
     │   └── template/
-    │       └── fsd-master-template.md   # skeleton BAB + konvensi ID
+    │       ├── fsd-master-template.md        # legacy scope multi-menu
+    │       ├── fsd-single-menu-template.md   # satu menu
+    │       └── fsd-parent-module-template.md # parent/modul + submenu
     └── fsd-convert/
         ├── SKILL.md                 # instruksi konversi .docx
         └── docx-kit/
@@ -163,13 +165,23 @@ repo utama) dan membuat folder output di bawah `docs/tasks/fsd/`.
 ### 2. Tulis / lanjutkan FSD
 
 ```
-# FSD fokus satu role
+# Launcher adaptif: rekomendasi lanjutkan Draf atau katalog dokumen
+/fsd-doc admin-ta
+/fsd-doc admin-ta,applicant
+
+# Langsung membuat satu menu atau satu modul
+/fsd-doc admin-ta single "Manage Vacancy"
+/fsd-doc admin-ta module "Master Data"
+# alias Indonesia: menu, modul, lanjut, buka
+/fsd-doc admin-ta lanjut
+/fsd-doc admin-ta buka
+
+# Mode kompatibel/legacy: satu FSD scope-role dengan banyak BAB menu
 /fsd-doc admin-ta "Dashboard"
 /fsd-doc admin-ta "Manage Vacancy"       # menu berikutnya → BAB baru
 
-# FSD tunggal yang membandingkan dua role
+# Scope lintas-role tetap didukung dan urutan selector dinormalisasi
 /fsd-doc admin-ta,applicant "Dashboard"
-# input berikut memilih file yang sama karena urutan role dinormalisasi
 /fsd-doc applicant,admin-ta "Notification"
 ```
 
@@ -180,18 +192,70 @@ repo utama) dan membuat folder output di bawah `docs/tasks/fsd/`.
 > **leksikografis berdasarkan slug** (bukan urutan `modules[]` config, yang bisa
 > berubah bila proyek mengedit ulang urutan entry, dan bukan urutan prompt).
 
-| Prompt | Dokumen yang dibuat/diperbarui |
-|---|---|
-| `/fsd-doc admin-ta "Dashboard"` | `fsd-admin-ta.md` — hanya akses Admin TA |
-| `/fsd-doc applicant "Dashboard"` | `fsd-applicant.md` — hanya akses Applicant |
-| `/fsd-doc admin-ta,applicant "Dashboard"` | `fsd-admin-ta--applicant.md` — satu FSD untuk kedua role |
+#### Launcher `/fsd-doc <role[,role...]>`
 
-- File baru → isi BAB I lalu BAB II.
-- File ada → menu ditambahkan sebagai BAB baru; BAB sebelumnya tidak diubah;
-  Daftar Isi + Peta Menu (1.4) diperbarui.
+Launcher membaca katalog dan sidecar dulu, lalu beradaptasi:
+
+- Jika hanya ada satu pekerjaan **Draf**, launcher merekomendasikan titik-lanjut
+  tersebut sebagai pilihan pertama.
+- Jika ada beberapa Draf, launcher menampilkan daftar pekerjaan yang perlu
+  dilanjutkan; dokumen Selesai tetap tersedia melalui **Lihat semua dokumen**.
+- Jika katalog kosong, launcher langsung menawarkan pembuatan Single Menu,
+  Parent Menu/Modul, atau legacy multi-menu.
+
+Katalog menampilkan nama target, jenis, role, status, dan progres ringkas — bukan
+nama file teknis. Contoh:
+
+```text
+[Perlu dilanjutkan] Parent Menu/Modul · Master Data
+3 dari 5 submenu · Position → Aturan Bisnis (Draf)
+Role: Admin TA
+```
+
+Saat membuat **Single Menu**, skill terlebih dahulu menemukan kandidat menu/rute,
+lalu user mengonfirmasi kandidat yang benar. Jika menu sudah memiliki dokumen,
+pilihan default adalah melanjutkan dokumen itu, bukan membuat duplikat.
+
+Saat membuat **Parent Menu/Modul**, skill terlebih dahulu memverifikasi parent
+(sebagai halaman atau ekspander navigasi), kemudian menawarkan submenu yang benar-
+benar ditemukan sebagai daftar pilihan. Parent tanpa rute tetap dapat didokumentasi
+bila memang ekspander yang menaungi submenu.
+
+Saat merevisi, titik-lanjut sidecar menjadi pilihan pertama. Jika memilih area lain,
+pilih BAB dahulu lalu sub-bab; sebelum perubahan, skill menyebut batas perubahan
+agar BAB lain tetap beku.
+
+| Jenis | Dokumen | Sidecar |
+|---|---|---|
+| Legacy scope multi-menu | `fsd-{scope-key}.md` | `fsd-{scope-key}.progress.md` |
+| Single Menu | `fsd-{scope-key}--single-menu--{target-key}.md` | stem yang sama + `.progress.md` |
+| Parent Menu/Modul | `fsd-{scope-key}--parent-module--{target-key}.md` | stem yang sama + `.progress.md` |
+
+`target-key` dibentuk dari hasil discovery, bukan sekadar judul prompt. Metadata
+YAML menyimpan jenis, scope canonical, target, rute per role, serta `child_menus`
+untuk modul. Saat launcher dipanggil lagi, metadata dan rute ini membuat skill
+dapat menemukan dokumen yang sudah ada tanpa membuat duplikat. Nama file dan
+metadata adalah mekanisme internal: user cukup memilih kartu dokumen yang
+menampilkan nama, jenis, role, dan progres.
+
+- File legacy baru → isi BAB I lalu BAB II; file legacy ada → menu yang belum ada
+  ditambahkan sebagai BAB baru dan BAB yang sudah ada dilanjutkan secara idempoten.
+- Single Menu tidak menerima menu tambahan (kecuali BAB Split untuk varian role
+  dari menu yang sama).
+- Parent Menu/Modul menulis satu BAB parent lalu satu BAB mandiri per submenu.
+  Penambahan submenu hanya menambah BAB submenu, Peta Submenu, metadata, dan
+  sidecar; submenu lama tidak diubah tanpa pemilihan revisi eksplisit.
 - Single-role mempertahankan nama file, sidecar, aset, dan output DOCX lama.
   Dokumen role-set adalah scope baru; skill **tidak menggabungkan otomatis** FSD
   single-role yang sudah ada.
+
+#### Template override per jenis
+
+Override legacy yang ada tetap memakai `docs/tasks/fsd/template.override.md`.
+Untuk tipe baru, gunakan `template.single-menu.override.md` atau
+`template.parent-module.override.md` di folder yang sama. Bila tidak ada,
+engine memakai template bawaan khusus jenis tersebut; override legacy tidak
+berlaku otomatis untuk dokumen baru.
 
 #### Keputusan bentuk menu lintas-role
 
@@ -358,22 +422,35 @@ menyalin pola `./images/` lama ke template override proyek.
 ### 3. Konversi ke .docx (salinan klien)
 
 ```
-# Mengonversi FSD khusus role
+# Tetap mengonversi FSD legacy canonical bila file tersebut ada
 /fsd-convert admin-ta
 
-# Mengonversi satu FSD lintas-role canonical
+# Selector lintas-role canonical
 /fsd-convert admin-ta,applicant
-# selector terbalik juga memilih sumber yang sama
 /fsd-convert applicant,admin-ta
+
+# Buka katalog atau pilih jenis + target secara eksplisit
+/fsd-convert admin-ta open
+/fsd-convert admin-ta single "Manage Vacancy"
+/fsd-convert admin-ta module "Master Data"
+# Target judul lama tetap didukung
+/fsd-convert admin-ta "Master Data"
 ```
 
 `fsd-convert` menerapkan validasi dan canonicalization selector yang sama dengan
-`fsd-doc`; ia mencari satu sumber `fsd-{document_key}.md` dan memeriksa metadata
-scope di Markdown bila tersedia. Ia **tidak** menyatukan dua FSD single-role.
+`fsd-doc`. Tanpa target ia memilih `fsd-{scope_key}.md` legacy agar command
+existing tetap kompatibel. Dengan target — atau bila legacy tidak ada dan katalog
+memiliki satu kandidat — skill memilih satu FSD baru berdasarkan metadata YAML.
+Jika kandidat lebih dari satu atau target ambigu, skill menampilkan kartu jenis,
+role, progres, dan submenu sebelum meminta pilihan pengguna; ia **tidak**
+menyatukan dokumen yang berbeda. Bila dokumen yang dipilih masih Draf, user
+memilih konversi sebagai draf atau kembali melanjutkan FSD.
 
-Output ber-brand sesuai `brand.*` config. Single-role tetap memakai pola
-`FSD-Modul-{Modul}`; role-set menggunakan nama scope canonical, misalnya
-`FSD-Modul-Admin-Ta-Dan-Applicant.docx`.
+Output ber-brand sesuai `brand.*` config. Legacy memakai pola
+`FSD-Modul-{Modul}`; role-set legacy menggunakan nama scope canonical, misalnya
+`FSD-Modul-Admin-Ta-Dan-Applicant.docx`. Output tipe baru menambahkan jenis dan
+target agar tidak menimpa, misalnya
+`FSD-Modul-Admin-Ta-Parent-Modul-Master-Data.docx`.
 
 ---
 

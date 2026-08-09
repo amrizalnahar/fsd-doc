@@ -2,11 +2,14 @@
 name: fsd-convert
 description: >-
   Konversi dokumen FSD Markdown satu role atau scope lintas-role menjadi .docx
-  ber-brand (salinan klien) memakai docx-kit (Pandoc + reference.docx). Mengisi
-  metadata sampul dari config, membuat Daftar Isi otomatis, dan menamai output
-  berpola FSD-Modul-{Scope}. Pakai saat diminta "konversi FSD ke .docx", "build
-  docx FSD", atau /fsd-convert <role[,role...]>. Butuh doc-fsd.config.yml +
-  dokumen .md hasil /fsd-doc. Prasyarat: Pandoc.
+  ber-brand (salinan klien) memakai docx-kit (Pandoc + reference.docx). Mendukung
+  FSD scope multi-menu legacy, Single Menu, dan Parent Menu/Modul; tanpa target
+  tetap mengonversi dokumen legacy canonical, sedangkan target/launcher memilih
+  satu dokumen baru dari katalog. Mengisi metadata sampul, membuat Daftar Isi
+  otomatis, dan menamai output unik. Pakai saat diminta "konversi FSD ke .docx",
+  "build docx FSD", atau /fsd-convert <role[,role...]> [open|single|module]
+  ["<Nama FSD>"]. Butuh doc-fsd.config.yml + dokumen .md hasil /fsd-doc.
+  Prasyarat: Pandoc.
 ---
 
 # fsd-convert — Konversi FSD .md → .docx ber-brand
@@ -42,10 +45,46 @@ ber-brand.
    - Sumber tidak ditemukan di key leksikografis, tapi ada dokumen lama dengan
      key hasil urutan `modules[]` lama → hentikan dan minta migrasi/rename
      eksplisit, jangan menebak sumber mana yang dimaksud.
-5. Pastikan dokumen sumber ada:
-   `{output.documents_dir}/fsd-{document_key}.md`. Bila metadata scope pada
-   Markdown tersedia, role canonical di sana wajib cocok dengan selector;
-   mismatch → hentikan dan minta migrasi eksplisit.
+5. Tentukan dokumen sumber dengan grammar yang sama seperti `/fsd-doc`:
+   - `/fsd-convert <scope>` → konversi legacy canonical
+     `{output.documents_dir}/fsd-{scope_key}.md` bila ada (kompatibilitas).
+   - `/fsd-convert <scope> open` → tampilkan katalog ramah pengguna.
+   - `/fsd-convert <scope> single "<Nama Menu>"` atau
+     `/fsd-convert <scope> module "<Nama Modul>"` → pilih jenis dan target
+     eksplisit. Alias Indonesia `menu`, `modul`, dan `buka` diterima; tampilkan
+     command canonical pada respons.
+   - Target judul bebas tetap didukung, tetapi bila cocok dengan lebih dari satu
+     dokumen, tampilkan kartu kandidat (jenis, role, progres/submenu) dan minta
+     satu pilihan — jangan meminta user mengetik ulang judul.
+
+   Gunakan pola `fsd-{scope_key}*.md` hanya untuk kandidat awal. Metadata YAML
+   `scope_key` dan `scope_roles` yang cocok persis adalah filter otoritatif,
+   kemudian `document_type` (`single-menu`/`parent-module`) dan `document_key`
+   diverifikasi terhadap stem nama file. YAML/metadata malformed atau mismatch
+   adalah blocker: jelaskan apa yang terjadi, nyatakan bahwa tidak ada dokumen
+   diubah, lalu tawarkan lihat perbedaan atau batalkan/perbaiki-migrasikan file.
+
+   Dokumen legacy tanpa `document_type` hanya sah bila namanya persis
+   `fsd-{scope_key}.md`. Dokumen baru dikonversi satu per satu; jangan
+   menggabungkan tipe/target berbeda. Tanpa legacy dan dengan tepat satu kandidat
+   baru yang valid, pilih kandidat itu; bila lebih dari satu, tampilkan katalog.
+
+### Preview sebelum konversi
+
+Sebelum membuat salinan atau menjalankan Pandoc, tampilkan satu ringkasan:
+
+```text
+Dokumen: Parent Menu/Modul — Master Data
+Role: Admin TA
+Status: Draf — 3/5 submenu selesai
+Output: FSD-Modul-Admin-Ta-Parent-Modul-Master-Data.docx
+```
+
+Dokumen berstatus **Draf** harus memunculkan pilihan: **Konversi sebagai draf**
+atau **Kembali untuk melanjutkan FSD**. Konversi sebagai draf hanya membuat salinan
+`.docx`; ia tidak mengubah status master/sidecar. Dokumen Selesai dapat langsung
+dilanjutkan setelah user melihat preview. Bila target ambigu, preview baru muncul
+setelah user memilih satu kartu dokumen.
 
 ## Langkah konversi
 
@@ -72,19 +111,25 @@ GitHub):
    hilang — bukan diam-diam mengganti gambar dengan teks alt.
 5. **Hitung nama output** dari `output.docx_name_pattern` dan teruskan lewat
    `-Out` ke `output.docx_dir` — jangan mengandalkan fallback nama bawaan skrip.
-   Untuk satu role, `{Modul}` tetap slug Title-Case (mis. `admin-ta` →
-   `Admin-Ta`). Untuk role-set, gunakan display scope canonical yang aman untuk
-   nama file (mis. `admin-ta,applicant` → `Admin-Ta-Dan-Applicant`).
+   Untuk dokumen legacy, `{Modul}` tetap scope Title-Case (satu role `admin-ta`
+   → `Admin-Ta`; role-set `admin-ta,applicant` → `Admin-Ta-Dan-Applicant`).
+   Untuk Single Menu/Parent Menu, tambahkan label jenis dan `target_key` yang
+   sudah disanitasi secara deterministik, misalnya
+   `FSD-Modul-Admin-Ta-Single-Menu-Manage-Vacancy.docx` atau
+   `FSD-Modul-Admin-Ta-Parent-Modul-Master-Data.docx`. Ini mencegah output jenis
+   berbeda pada scope sama saling menimpa.
+
    **Bila `docx.reference` di config diisi**, resolve path-nya relatif terhadap
    folder config, validasi filenya ada, lalu teruskan lewat `-Reference`; bila
    kosong, skrip memakai `docx-kit/reference.docx` bawaan:
 
    ```powershell
-   ./docx-kit/build-docx.ps1 <salinan.md> -Out {output.docx_dir}/FSD-Modul-Admin-Ta-Dan-Applicant.docx -TocDepth {docx.toc_depth} -Reference {docx.reference}
+   ./docx-kit/build-docx.ps1 <salinan.md> -Out {output.docx_dir}/FSD-Modul-Admin-Ta-Parent-Modul-Master-Data.docx -TocDepth {docx.toc_depth} -Reference {docx.reference}
    ```
 
    `/fsd-convert admin-ta,applicant` hanya mengonversi satu Markdown canonical;
-   ia tidak menggabungkan FSD single-role yang sudah ada.
+   ia tidak menggabungkan FSD single-role yang sudah ada maupun FSD baru dengan
+   tipe/target berbeda.
 
 6. Buka di Word; bila Daftar Isi belum terisi, klik kanan → **Update Field**.
 

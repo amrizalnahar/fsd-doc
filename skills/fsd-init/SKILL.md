@@ -62,11 +62,12 @@ config/artefak.**
 Catatan path: nilai `codebase.*` dan `output.*` di config tetap ditulis relatif
 terhadap **root repo** (mis. `backend/…`, `docs/tasks/fsd/documents/…`), meski
 file config-nya sendiri berada di `docs/tasks/fsd/`.
-7. **Arahkan langkah berikutnya:** setelah config siap, tulis BAB pertama dengan
-   `/fsd-doc <role> "<Nama Menu>"` untuk FSD khusus role, atau
-   `/fsd-doc <role-1>,<role-2> "<Nama Menu>"` untuk satu FSD lintas-role.
-   Jangan membuat entry `modules[]` seperti `admin-ta,applicant`; role-set selalu
-   dipilih saat command dipanggil.
+7. **Arahkan langkah berikutnya:** setelah config siap, jalankan
+   `/fsd-doc <role[,role...]>` untuk memilih FSD Single Menu, Parent Menu/Modul,
+   atau dokumen yang sudah ada. Command kompatibel
+   `/fsd-doc <role[,role...]> "<Nama Menu>"` tetap membuat/melanjutkan FSD
+   scope multi-menu legacy. Jangan membuat entry `modules[]` seperti
+   `admin-ta,applicant`; role-set selalu dipilih saat command dipanggil.
 
 ## Catatan
 

@@ -5,6 +5,46 @@ Semua perubahan penting doc-fsd dicatat dalam dokumen ini.
 Format mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 dan project memakai [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Launcher `/fsd-doc <role[,role...]>` untuk memilih FSD **Single Menu**,
+  **Parent Menu/Modul**, membuka dokumen yang ada, atau mengelola FSD scope
+  multi-menu legacy.
+- Template bawaan terpisah untuk Single Menu dan Parent Menu/Modul; template
+  modul mencakup BAB parent, Peta Submenu, serta pola BAB per submenu.
+- Metadata YAML jenis dokumen, target, rute per role, dan daftar submenu untuk
+  katalog, deteksi duplikasi, serta kelanjutan lintas-sesi yang deterministik.
+- Pemilihan BAB lalu sub-bab untuk melanjutkan atau merevisi dokumen yang sudah
+  ada.
+- Dukungan `/fsd-convert` untuk memilih satu FSD Single Menu/Parent Menu/Modul
+  dan nama `.docx` unik berdasarkan jenis serta target.
+- Intent prompt ringkas `single`, `module`, `resume`, dan `open` (serta alias
+  Indonesia) untuk mempercepat pembuatan, kelanjutan, dan pemilihan dokumen.
+- Launcher adaptif/resume-first, discovery kandidat sebelum pembuatan, dan
+  katalog ringkas berdasarkan status/progres dokumen.
+
+### Changed
+
+- Pesan edge case sekarang mengarahkan tindakan berikutnya, menyatakan dampak
+  artefak, dan membedakan error input yang dapat dipulihkan dari integrity/
+  security blocker.
+- Konversi dokumen Draf memerlukan pilihan eksplisit untuk konversi sebagai draf
+  atau kembali melanjutkan FSD.
+
+- `fsd-doc` menyimpan artefak baru dengan stem yang memuat scope, jenis, dan
+  target: `fsd-{scope}--single-menu--{target}.md` atau
+  `fsd-{scope}--parent-module--{target}.md`.
+- `template.override.md` hanya berlaku untuk legacy scope multi-menu; tipe baru
+  memiliki override opt-in per jenis.
+
+### Compatibility
+
+- Command `/fsd-doc <role[,role...]> "<Nama Menu>"`, FSD legacy,
+  sidecar/aset legacy, dan `/fsd-convert <role[,role...]>` tetap berfungsi tanpa
+  migrasi otomatis.
+
 ## [2.0.0] - 2026-08-06
 
 ### Added
