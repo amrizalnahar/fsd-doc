@@ -488,7 +488,8 @@ Kontrak endpoint yang menopang menu ini — acuan bagi developer & QA. Untuk Adm
 | {{role terkait}} | {{PUT/PATCH}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Mengubah data}} | {{field yang diubah}} | {{PREFIX-05}} |
 | {{role terkait}} | {{DELETE}} | {{/rute/{id}}} | {{auth:... · capability}} | {{Menghapus / menonaktifkan}} | {{id}} | {{PREFIX-06}} |
 
-<!-- INTERNAL:START - sub-bab ini DIPANGKAS saat /fsd-convert; TIDAK ikut ke .docx klien -->
+<!-- INTERNAL:START -->
+<!-- Sub-bab ini DIPANGKAS saat /fsd-convert; TIDAK ikut ke .docx klien. -->
 ### 2.10.3 Matriks Keterlacakan (Traceability)
 
 **(Internal — untuk audit tim; TIDAK disertakan pada dokumen klien `.docx`.)**

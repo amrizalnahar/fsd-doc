@@ -2,13 +2,14 @@
 name: fsd-doc
 description: >-
   Tulis atau lanjutkan Functional Specification Document (FSD) satu role atau
-  scope lintas-role langsung dari codebase — satu file .md per scope, satu BAB
-  per menu/varian. Menyusun
-  BAB dari template bawaan; mengambil ERD dari migrasi/model, screenshot dari app
-  live (opsional via agent-browser), dan kontrak endpoint dari rute. Pakai saat
-  diminta membuat/melanjutkan FSD, "dokumentasi fungsional", "spesifikasi fitur
-  untuk UAT", atau /fsd-doc <role[,role...]> "<Nama Menu>". Butuh doc-fsd.config.yml —
-  bila belum ada, jalankan /fsd-init dulu. Konversi ke .docx: /fsd-convert.
+  scope lintas-role langsung dari codebase. Mendukung FSD scope-role multi-menu
+  legacy, FSD Single Menu, dan FSD Parent Menu/Modul beserta submenu. Jalankan
+  /fsd-doc <role[,role...]> untuk memilih jenis atau dokumen yang ada; command
+  legacy /fsd-doc <role[,role...]> "<Nama Menu>" tetap menambah/melanjutkan BAB
+  pada FSD scope-role multi-menu. Menyusun BAB dari template bawaan; mengambil
+  ERD dari migrasi/model, screenshot dari app live (opsional via agent-browser),
+  dan kontrak endpoint dari rute. Butuh doc-fsd.config.yml — bila belum ada,
+  jalankan /fsd-init dulu. Konversi ke .docx: /fsd-convert.
 ---
 
 # fsd-doc — Generator FSD (mode utama)
@@ -37,9 +38,12 @@ menggagalkan total; degrade dan catat ke pengguna.
      URL-slug-like (huruf kecil/angka/tanda-hubung tunggal), tidak memuat `--`;
      `output.*_dir` relatif (bukan absolut/`..`); `modules[].credentials`
      relatif, tanpa `..`, dan berada di dalam `docs/tasks/credentialRoles/`.
-3. Baca template: `./template/fsd-master-template.md` (di folder skill ini).
-   - Bila proyek punya `docs/tasks/fsd/template.override.md`, pakai itu sebagai
-     ganti template bawaan (lihat bagian Override).
+3. Siapkan template menurut mode yang akan dipilih setelah scope role selesai:
+   - legacy scope multi-menu → `./template/fsd-master-template.md`;
+   - Single Menu → `./template/fsd-single-menu-template.md`;
+   - Parent Menu/Modul → `./template/fsd-parent-module-template.md`.
+   Detail override per jenis ada pada bagian **Override template**; jangan
+   memutuskan template sebelum launcher/command menentukan jenis dokumen.
 4. **Resolve scope role dan baca sidecar bila ada.** Argumen pertama menerima
    satu role (`admin-ta`) atau role-set dipisahkan koma (`admin-ta,applicant`):
    - Pisahkan dengan koma, trim tiap token, lalu tolak token kosong atau duplikat.
@@ -61,16 +65,108 @@ menggagalkan total; degrade dan catat ke pengguna.
      **jangan** diam-diam membuat dokumen scope duplikat.
    - Ambil descriptor tiap role (title, portal, guard, credentials). Role-set
      **bukan** entri `modules[]` sintetis.
-   - Baca sidecar `{output.documents_dir}/fsd-{document_key}.progress.md` bila
-     ada. Ini titik-lanjut kerja (artefak INTERNAL, bukan bagian dokumen klien).
-     Untuk dokumen lintas-role, verifikasi metadata scope di Markdown/sidecar
-     sesuai role-set canonical; mismatch → hentikan dan minta migrasi eksplisit,
-     jangan diam-diam menambah/menghapus role.
+   - Untuk command legacy, baca sidecar
+     `{output.documents_dir}/fsd-{document_key}.progress.md` bila ada. Pada
+     launcher, baca sidecar dokumen yang dipilih dari katalog. Sidecar ini titik-
+     lanjut kerja (artefak INTERNAL, bukan bagian dokumen klien). Untuk dokumen
+     lintas-role, verifikasi metadata scope di Markdown/sidecar sesuai role-set
+     canonical; mismatch → hentikan dan minta migrasi eksplisit, jangan diam-diam
+     menambah/menghapus role.
    Bila ada → pakai untuk langsung tahu **di mana berhenti**, **pertanyaan terbuka
    yang memblokir Selesai**, dan **keputusan sesi sebelumnya**. Bila tidak ada →
    nanti dibuat di Langkah 7. Lihat langkah 7.
 5. Prasyarat yang hilang → JANGAN gagal total; degrade (lewati langkah terkait)
    dan catat ke pengguna.
+
+## Mode dokumen & invocation
+
+Setelah Langkah 0 menyelesaikan selector role, tentukan invocation berikut:
+
+| Invocation | Mode | Artefak target |
+|---|---|---|
+| `/fsd-doc <role[,role...]> "<Nama Menu>"` | **Legacy scope multi-menu** (kompatibel) | `fsd-{scope_key}.md` |
+| `/fsd-doc <role[,role...]>` | **Launcher adaptif** | rekomendasi lanjutkan atau katalog scope |
+| `/fsd-doc <role[,role...]> single "<Nama Menu>"` | **Single Menu** langsung | satu FSD target menu |
+| `/fsd-doc <role[,role...]> module "<Nama Modul>"` | **Parent Menu/Modul** langsung | satu FSD parent + submenu |
+| `/fsd-doc <role[,role...]> resume` | **Lanjutkan** pekerjaan Draf | titik-lanjut sidecar |
+| `/fsd-doc <role[,role...]> open` | **Buka katalog** | pilih satu dokumen scope |
+
+Alias Indonesia diterima sebagai kenyamanan prompt: `menu` untuk `single`,
+`modul` untuk `module`, `lanjut` untuk `resume`, dan `buka` untuk `open`. Setelah
+memahami alias, selalu tampilkan command canonical yang setara agar mudah
+disalinkan pada sesi berikutnya.
+
+Command legacy **tidak berubah**: satu file FSD scope-role berisi BAB I dan
+banyak BAB menu. Nama menu yang sama tetap dicocokkan melalui rute hasil
+discovery; bila sudah ada, lanjutkan BAB tersebut secara idempoten. Jika argumen
+tidak cocok unik dengan grammar di atas, jangan meminta user mengulang seluruh
+command: tampilkan interpretasi yang mungkin dan minta satu pilihan.
+
+### Launcher adaptif
+
+Setelah preflight, canonicalisasi role, dan pembacaan katalog valid, hitung status
+berdasarkan sidecar dan Peta Menu/Peta Submenu:
+
+- **Tepat satu pekerjaan Draf dengan titik-lanjut valid** → jadikan
+  **Lanjutkan rekomendasi** sebagai opsi pertama.
+- **Lebih dari satu pekerjaan Draf** → jadikan **Pilih pekerjaan untuk
+dilanjutkan** sebagai opsi pertama; tampilkan paling banyak lima item Draf,
+  lalu opsi *Lihat semua dokumen*.
+- **Katalog kosong** → langsung tawarkan pembuatan, tanpa opsi membuka dokumen.
+- **Tidak ada Draf tetapi katalog ada** → tampilkan **Buat dokumen baru** dan
+  **Lihat semua dokumen**.
+
+Format ringkasan harus ramah pengguna dan tidak menjadikan path/metadata sebagai
+informasi utama:
+
+```text
+Scope: Admin TA + Applicant
+Ditemukan: 1 pekerjaan perlu dilanjutkan, 2 dokumen selesai.
+Rekomendasi: Master Data — Position, Aturan Bisnis (Draf).
+
+1. Lanjutkan rekomendasi
+2. Buat dokumen baru
+3. Lihat semua dokumen
+4. Kelola FSD legacy multi-menu
+```
+
+Saat **Buat dokumen baru**, tampilkan hanya tiga pilihan: **Single Menu** (satu
+halaman/menu), **Parent Menu/Modul** (parent + beberapa submenu), atau **Legacy
+multi-menu** (banyak BAB menu dalam satu scope). Rekomendasi tidak pernah
+menulis artefak otomatis; pengguna tetap memilih atau mengonfirmasi tindakan.
+
+### Katalog dan identitas dokumen
+
+Gunakan pola nama `fsd-{scope_key}*.md` hanya untuk menemukan kandidat awal.
+Baca metadata YAML teratas **sebelum** memasukkan kandidat ke katalog; `scope_key`
+dan `scope_roles` yang cocok persis dengan selector canonical adalah filter
+otoritatif, lalu `document_key` diverifikasi terhadap stem nama file. Dengan ini
+scope yang prefix-nya sama (mis. `admin` dan `admin-ta`) tidak tercampur.
+
+Dokumen dengan metadata scope yang berbeda, metadata jenis tidak valid, atau YAML
+yang tidak dapat diparse adalah integrity blocker: hentikan aksi yang menyentuh
+dokumen itu dan beri pemulihan terarah — **apa yang terjadi**, **dampak**
+("Tidak ada dokumen atau aset yang diubah"), serta opsi **lihat perbedaan**,
+**buka dokumen scope yang benar**, atau **batalkan/perbaiki-migrasikan file**.
+Jangan mengabaikannya atau membuat duplikat diam-diam.
+
+| Jenis | `document_type` | Nama file | Sidecar |
+|---|---|---|---|
+| Scope multi-menu legacy | `legacy-scope` (implisit bila metadata lama tidak punya field ini) | `fsd-{scope_key}.md` | `fsd-{scope_key}.progress.md` |
+| Single Menu | `single-menu` | `fsd-{scope_key}--single-menu--{target_key}.md` | stem yang sama + `.progress.md` |
+| Parent Menu/Modul | `parent-module` | `fsd-{scope_key}--parent-module--{target_key}.md` | stem yang sama + `.progress.md` |
+
+`scope_key` selalu berasal dari role canonical. `document_key` adalah stem tanpa
+awalan `fsd-`; untuk dokumen baru mencakup scope, jenis, dan `target_key`.
+`target_key` adalah slug target setelah discovery (bukan semata prompt mentah).
+Setiap template baru menyimpan `document_type`, `scope_key`, `scope_roles`,
+`document_key`, `target_key`, `target_name`, serta rute per role bila sudah
+terbukti. Parent Menu/Modul juga menyimpan `child_menus` (nama, key, rute
+per-role). Metadata tersebut, lalu rute per role, adalah dasar deteksi duplikasi;
+judul mirip saja tidak cukup.
+
+Aset screenshot dan diagram memakai `{document_key}` sebagai folder scope aset,
+sehingga target bernama sama pada tipe dokumen berbeda tidak saling menimpa.
 
 ## Prinsip FSD
 
@@ -78,9 +174,14 @@ Jelaskan **APA** yang sistem lakukan dan **MENGAPA** (untuk verifikasi
 fungsional/UAT), **bukan** cara membangunnya. Detail teknis hanya di sub-bab
 "Lampiran Teknis" tiap BAB.
 
-Struktur: **satu file `.md` = satu scope role/portal**; **BAB I** diisi sekali;
-**BAB II, III, …** satu per menu atau varian menu bila discovery memutuskan
-Split. Kerjakan **sekuensial & tuntas per BAB** sebelum menu berikut.
+Struktur legacy: **satu file `.md` = satu scope role/portal**; **BAB I** diisi
+sekali; **BAB II, III, …** satu per menu atau varian menu bila discovery
+memutuskan Split. Kerjakan **sekuensial & tuntas per BAB** sebelum menu berikut.
+
+Struktur dokumen baru mengikuti jenisnya: Single Menu berisi konteks ringkas dan
+tepat satu menu (atau BAB Split yang memang membuktikan varian role dari menu
+sama); Parent Menu/Modul berisi satu BAB parent dan satu BAB per submenu yang
+terpilih.
 
 ## Aturan #1 — Dokumentasikan realita, bukan asumsi
 
@@ -174,41 +275,124 @@ langkah (baca kode, baca config, screenshot, baca kredensial).
    di luar `target_url`. Aksi read-only dalam origin yang diminta (navigasi,
    screenshot, baca DOM/kode) tidak perlu konfirmasi tambahan.
 
-## 1. Tentukan target file
+## 1. Tentukan dan buka target dokumen
 
-Argumen pertama adalah selector `<role[,role...]>` yang sudah di-resolve menjadi
-`{document_key}` pada Langkah 0:
+Selector role sudah di-resolve menjadi `{scope_key}` pada Langkah 0:
 
-- satu role `admin-ta` → `{output.documents_dir}/fsd-admin-ta.md`;
-- role-set `admin-ta,applicant` →
-  `{output.documents_dir}/fsd-admin-ta--applicant.md`.
+- satu role `admin-ta` → `admin-ta`;
+- role-set `admin-ta,applicant` → `admin-ta--applicant`.
 
 > **Konvensi role scope.** `modules[]` tetap memuat role/portal individual (mis.
 > `admin-ta`, `applicant`, `public`) beserta guard dan kredensialnya. Satu role
 > menghasilkan FSD khusus role itu; beberapa role dipisahkan koma menghasilkan
 > **satu FSD lintas-role**. Input terbalik tetap memakai key canonical yang sama.
 
-- File belum ada → buat baru; isi **BAB I** dari template, metadata scope
-  canonical (role slug + display title), lalu BAB pertama untuk menu yang diminta.
-- File sudah ada → **baca dulu**, pastikan metadata scope sama, lalu **cari dulu
-  menu yang diminta di Peta Menu (1.4) dan sidecar progres** — cocokkan lewat
-  rute/URL menu (bukan hanya kemiripan teks prompt/label, yang bisa menipu, mis.
-  dua menu berlabel sama tapi rute beda, atau prompt dengan ejaan/kapitalisasi
-  berbeda dari BAB yang sudah ada):
-  - **Ditemukan** (menu/rute yang sama sudah punya BAB) → **lanjutkan BAB yang
-    ada** (edit sub-bab yang belum tuntas di tempat). **Jangan** membuat BAB
-    baru, nomor BAB baru, prefix ID baru, atau folder aset baru untuk menu yang
-    sama — prompt `/fsd-doc <scope> "<menu yang sama>"` yang diulang harus
-    idempoten, bukan menambah BAB duplikat.
-  - **Tidak ditemukan** → tambahkan menu sebagai BAB baru (naikkan nomor BAB &
-    sub-bab).
-  - **Ambigu** (rute tak jelas, atau prompt bisa merujuk ke lebih dari satu BAB
-    yang ada) → tanya pengguna sebelum menulis apa pun; jangan menebak.
-  Jangan ubah BAB I atau bab sebelumnya, kecuali memperbarui Daftar Isi + Peta
-  Menu (1.4). Jaga konsistensi istilah, role attribution, dan konvensi ID.
+### 1.1 Mode legacy scope multi-menu
+
+Mode ini dipakai otomatis bila command menyertakan `"<Nama Menu>"`, atau saat
+launcher memilih **Kelola FSD scope multi-menu legacy**. Targetnya selalu
+`{output.documents_dir}/fsd-{scope_key}.md`.
+
+- File belum ada → buat baru dari `fsd-master-template.md` atau
+  `docs/tasks/fsd/template.override.md`; isi BAB I, metadata scope canonical,
+  lalu BAB pertama untuk menu yang diminta.
+- File sudah ada → baca dulu, pastikan metadata scope sama, lalu cari menu di
+  Peta Menu (1.4) dan sidecar progres melalui rute/URL hasil discovery, bukan
+  hanya kemiripan label:
+  - **Ditemukan** → lanjutkan BAB yang ada. Jangan membuat BAB, prefix, atau
+    folder aset duplikat.
+  - **Tidak ditemukan** → tambahkan BAB menu baru serta perbarui Daftar Isi dan
+    Peta Menu.
+  - **Ambigu** → tanyakan pengguna sebelum menulis.
 - Jangan menggabungkan otomatis `fsd-admin-ta.md` dan `fsd-applicant.md` lama.
   Role-set baru adalah scope baru; migrasi konten, bukti, dan aset dilakukan
   eksplisit agar klaim yang konflik tidak tercampur.
+
+### 1.2 Membuat FSD Single Menu (discovery-first)
+
+1. Terima satu nama menu dalam bahasa pengguna, lalu discovery mencari kandidat
+   navigasi/rute **per role** sebelum membuat file.
+2. **Satu kandidat** → tampilkan nama UI, rute per role, dan role yang tersedia;
+   minta konfirmasi singkat *Gunakan menu ini?*.
+3. **Banyak kandidat** → tampilkan paling banyak lima kandidat yang dibedakan oleh
+   label, rute, role, dan parent; sediakan opsi **Tidak ada yang sesuai / cari
+   lagi**. **Tidak ditemukan** → jelaskan area yang sudah diperiksa dan tawarkan
+   cari dengan nama/rute lain, kembali ke launcher, atau catat pertanyaan terbuka
+   tanpa membuat FSD fiktif.
+4. Tentukan `target_key` dari kandidat yang dikonfirmasi dan catat nama/rute per
+   role pada metadata. Cari katalog `single-menu` dengan `scope_key + target_key`,
+   lalu bandingkan rute per role.
+5. Jika dokumen sama ada, jadikan **Lanjutkan dokumen yang ada** sebagai opsi
+   default, dengan opsi *lihat detail*, *buat jenis dokumen lain*, atau *batalkan*.
+   Jangan membuat dokumen, BAB, prefix, atau aset baru.
+6. Bila tidak ada, buat `fsd-{scope_key}--single-menu--{target_key}.md` dari
+   template/override jenisnya. Menu lain tidak boleh ditambahkan sebagai BAB baru;
+   gunakan Single Menu lain, Parent Menu/Modul, atau legacy. Pengecualian hanya
+   BAB Split yang terbukti varian role dari target sama.
+
+### 1.3 Membuat FSD Parent Menu/Modul (parent-first)
+
+1. Terima nama parent/modul, lalu discovery menentukan apakah ia halaman, ekspander
+   navigasi, atau bukan parent. Parent tanpa rute **tetap valid** bila ia ekspander
+   dan hubungan submenu terbukti; dokumentasikan sebagai navigational parent.
+2. Jika banyak kandidat parent, tampilkan label, posisi navigasi, rute (atau
+   "tanpa rute — ekspander"), dan role. Jika tidak ada, gunakan pemulihan target
+   tidak ditemukan pada alur Single Menu.
+3. Setelah parent dikonfirmasi, kumpulkan submenu nyata dari kode per role dan
+   tampilkan sebagai multiselect: tersedia semua role, role tertentu, atau
+   hubungan parent belum cukup bukti. Input submenu manual diperlakukan sebagai
+   pencarian tambahan, bukan langsung dimasukkan.
+4. Periksa katalog `parent-module` melalui `scope_key + target_key` dan rute
+   parent. Jika ada, rekomendasikan tindakan sesuai status: lanjutkan Draf,
+   tambah submenu (tampilkan diff baru vs tercakup), revisi parent, atau lihat
+   detail. Jangan menggandakan dokumen.
+5. Bila belum ada, buat dokumen parent dari template/override, BAB parent, lalu
+   BAB standar per submenu terpilih. Menambah submenu kemudian hanya mengubah
+   daftar isi, peta submenu, `child_menus`, sidecar, dan BAB submenu baru.
+
+### 1.4 Buka, lanjutkan, atau revisi dokumen dari katalog
+
+1. Urutkan kartu katalog: Draf dengan titik-lanjut, Belum, lalu Selesai. Untuk
+   modul, tampilkan progres `Selesai/Total`, status parent, dan maksimal dua
+   pertanyaan terbuka prioritas. Path/stem hanya ditampilkan bila diminta atau
+   saat konflik.
+2. Jika sidecar memiliki satu titik-lanjut valid, tampilkan ringkasannya dan
+   jadikan **Lanjutkan dari titik ini** opsi pertama. User dapat memilih *Pilih
+   bagian lain*.
+3. Untuk bagian lain, tampilkan tree bertahap: pilih BAB terlebih dahulu, baru
+   sub-bab. Input natural seperti "revisi akses Position" dicocokkan ke indeks
+   heading; satu kandidat → preview target, banyak kandidat → hanya tampilkan
+   kandidat relevan.
+4. Sebelum revisi, tampilkan change boundary: BAB/sub-bab yang akan diperiksa dan
+   yang mungkin diubah; BAB lain tetap beku. Re-discover hanya area tersebut lalu
+   perbarui Source, traceability, peta, metadata/submenu, status, dan sidecar.
+5. Requirement tanpa bukti kode hanya menawarkan **Catat sebagai pertanyaan
+   terbuka** (default) atau **Batalkan**; jangan menuliskannya sebagai perilaku
+   aktif.
+
+### 1.5 Standar pemulihan edge case
+
+Untuk setiap hambatan, respons harus memiliki tiga bagian singkat:
+
+1. **Apa yang terjadi** — bahasa pengguna, bukan dump metadata.
+2. **Dampak** — nyatakan jelas apakah dokumen/aset tidak diubah.
+3. **Tindakan berikutnya** — maksimal tiga opsi konkret atau command canonical.
+
+| Kategori | Perlakuan UX |
+|---|---|
+| Input dapat dipulihkan | Sarankan kandidat/opsi dan tetap berada pada flow; contoh role typo, target tidak ditemukan, atau target ambigu. |
+| Aman tetapi butuh keputusan | Tampilkan ringkasan/diff dan tindakan; contoh banyak Draf, rute berubah, atau menu tampil di dua parent. |
+| Integrity/security blocker | Hentikan aksi terkait tanpa bypass; jelaskan artefak yang perlu diperbaiki; contoh YAML rusak, scope mismatch, path kredensial tidak aman, atau redirect cross-origin. |
+
+Contoh blocker metadata:
+
+```text
+Saya menemukan metadata scope yang tidak cocok pada “Master Data”.
+Tidak ada dokumen atau aset yang diubah.
+1. Lihat perbedaan metadata
+2. Buka dokumen dengan scope yang benar
+3. Batalkan lalu perbaiki/migrasikan file
+```
 
 ## 2. Konvensi ID (dari template)
 
@@ -216,16 +400,23 @@ Argumen pertama adalah selector `<role[,role...]>` yang sudah di-resolve menjadi
 - Aturan bisnis: `{PREFIX}-BR-01`, … Pilih `{PREFIX}` pendek per menu, daftarkan
   di Peta Menu (1.4). Prefix harus unik antar-menu dalam satu scope.
 
-## 3. Susun BAB menu (pola BAB II template)
+## 3. Susun BAB parent dan menu
 
-Isi sub-bab 2.1–2.9 dari **peta sumber** (lihat Aturan #1), menelusuri perilaku
+Isi sub-bab menu dari **peta sumber** (lihat Aturan #1), menelusuri perilaku
 nyata fitur di codebase: gambaran umum, daftar fungsi, data & isian formulir,
 aturan bisnis, hak akses khusus menu, alur proses, pesan sistem, antarmuka,
 keterkaitan menu lain. Bahasa: sesuai `project.language` (default `id`).
 
-Tiap baris fungsi (2.2), aturan bisnis (2.4), field (2.3), pesan (2.7), dan
-langkah alur (2.6) membawa komentar `<!-- Source: file:baris -->`. Yang tak
-bersumber tidak ditulis — tandai `TIDAK TERVERIFIKASI` dan tanya developer.
+Untuk Parent Menu/Modul, petakan dan tulis BAB parent **sebelum** BAB submenu:
+posisi parent dalam navigasi, kondisi visibilitas, hierarki submenu, hak akses
+modul, serta alur dan ketergantungan lintas-menu. Setiap submenu tetap wajib
+mempunyai peta sumber, matriks akses, lampiran teknis, dan traceability sendiri;
+parent tidak boleh dipakai untuk menyimpulkan perilaku submenu yang belum
+terbukti.
+
+Tiap baris fungsi, aturan bisnis, field, pesan, dan langkah alur membawa komentar
+`<!-- Source: file:baris -->`. Yang tak bersumber tidak ditulis — tandai `TIDAK
+TERVERIFIKASI` dan tanya developer.
 
 ## 4. Screenshot (opsional — butuh `agent-browser`)
 
@@ -315,7 +506,9 @@ Format `docs/tasks/credentialRoles/<peran>.md`:
   untuk setiap role** dengan `modules[].credentials` miliknya. Jangan memakai
   satu sesi atau screenshot untuk menyimpulkan akses role lain.
 - Simpan screenshot ke
-  `{output.screenshots_dir}/{document_key}/{menu-slug}/{role-slug}/{prefix}-{topik}.png`.
+  `{output.screenshots_dir}/{document_key}/{menu-slug}/{role-slug}/{prefix}-{topik}.png`,
+  dengan `{document_key}` = key dokumen yang dipilih (legacy memakai `scope_key`,
+  Single Menu/Parent Menu memakai key lengkapnya).
   Caption FSD wajib menyebut role/profil akses yang dipakai.
 - Saat menyisipkan gambar, hitung link Markdown relatif dari
   `output.documents_dir` menuju file aset aktual; jangan hard-code `./images/`.
@@ -330,7 +523,8 @@ Format `docs/tasks/credentialRoles/<peran>.md`:
 
 - Tulis diagram bersama sebagai `.mmd` ke
   `{output.diagrams_dir}/{document_key}/{menu-slug}/…`; diagram khusus role di
-  subfolder `{role-slug}/`. Link PNG di Markdown harus relatif dari
+  subfolder `{role-slug}/`. `{document_key}` adalah key dokumen lengkap yang
+  dipilih (bukan selalu scope role). Link PNG di Markdown harus relatif dari
   `output.documents_dir`.
 - Render: `mmdc -i <file>.mmd -o <file>.png -b {mermaid.background} -s {mermaid.scale}`.
 - `mmdc` tak ada → simpan `.mmd` saja + catat perlu render manual.
@@ -355,16 +549,19 @@ Format `docs/tasks/credentialRoles/<peran>.md`:
 
 ## 7. Perbarui pelacak & sidecar progres
 
-Update Daftar Isi + Peta Menu (1.4). Status **Selesai** hanya bila lolos
-self-check (langkah 8). Selama ada yang belum diverifikasi → **Draf**.
+Update Daftar Isi + Peta Menu (legacy/Single Menu) atau Peta Submenu (Parent
+Menu/Modul). Status **Selesai** hanya bila lolos self-check (langkah 8). Selama
+ada yang belum diverifikasi → **Draf**. Pada dokumen Parent Menu/Modul, sinkronkan
+peta submenu dengan `child_menus` pada metadata YAML setiap kali submenu
+bertambah, dihapus melalui migrasi eksplisit, atau berubah rutenya.
 
 **Lalu perbarui sidecar progres**
 `{output.documents_dir}/fsd-{document_key}.progress.md` sebelum sesi berakhir
 (buat bila belum ada). Ini artefak kerja **INTERNAL** — sumber kebenaran "di mana
 kita berhenti", **bukan** bagian dokumen klien: tidak diambil `/fsd-convert`
 (ia hanya menarik `fsd-{document_key}.md`) dan tidak di-embed ke `.docx`. Peta
-Menu (1.4) hanya melacak status antar-BAB; sidecar menutup tiga hal
-yang tidak tertangkap di mana pun:
+Menu/Peta Submenu hanya melacak status antar-BAB; sidecar menutup tiga hal yang
+tidak tertangkap di mana pun:
 
 1. **Titik-lanjut** — BAB/sub-bab yang sedang digarap + aksi berikut paling atas,
    agar sesi baru lanjut di dalam BAB, bukan cuma tahu "Draf".
@@ -382,9 +579,31 @@ Format:
 > Sidecar kerja, bukan bagian dokumen FSD. Tidak dikonversi ke .docx.
 > Dibaca di Langkah 0, diperbarui di Langkah 7 tiap sesi.
 
+## Identitas Dokumen
+- Jenis dokumen  : <legacy-scope / single-menu / parent-module>
+- Document key   : <key lengkap tanpa awalan fsd->
+- Target         : <nama scope / menu / parent menu atau modul>
+- Target key     : <slug target; legacy = scope_key>
+
+## Ringkasan untuk Launcher
+- Jenis status       : <Belum / Draf / Selesai>
+- Progress ringkas   : <mis. "Position — Aturan Bisnis (Draf)" atau "3/5 submenu selesai">
+- Target revisi akhir: <BAB/sub-bab terakhir atau "—">
+- Aktivitas terakhir : <ringkasan sesi; tanggal bila tersedia>
+
+<!-- Perbarui bersama metadata display dokumen tiap sesi. Ringkasan ini untuk
+     katalog launcher dan tidak menggantikan Titik-lanjut atau Pertanyaan terbuka. -->
+
 ## Scope Role
 - Role canonical : <mis. admin-ta, applicant>
 - Display scope  : <judul portal/role>
+
+## Peta Submenu (khusus Parent Menu/Modul)
+| Key | Submenu | Rute per Role | BAB | Status |
+|---|---|---|---|---|
+| <submenu-key> | <nama> | <role: /rute> | <III> | <Belum / Draf / Selesai> |
+
+<!-- Hapus seluruh bagian ini untuk legacy-scope dan single-menu. -->
 
 ## Keputusan Scope Lintas-Role
 - Menu             : <menu yang diperiksa>
@@ -417,7 +636,10 @@ tim boleh meng-gitignore bila tak ingin catatan sesi masuk repo klien.)
 
 Sebelum menandai sebuah BAB **Selesai** di langkah 7, **baca ulang** BAB yang baru
 ditulis/diperbarui dan pindai pelanggaran. Ini pengaman terakhir Aturan #1 —
-periksa hanya BAB menu yang sedang digarap (bab sebelumnya sudah beku).
+periksa hanya BAB parent/menu yang sedang digarap (bab sebelumnya sudah beku).
+Untuk Parent Menu/Modul, periksa pula bahwa parent, Peta Submenu, metadata
+`child_menus`, dan BAB submenu yang tercakup menyatakan daftar/rute/status yang
+sama.
 
 Cara praktis: untuk tiap baris `| {PREFIX}-NN | … |` pada Daftar Fungsi (2.2) dan
 Aturan Bisnis (2.4), pastikan syarat di bawah terpenuhi.
@@ -442,6 +664,9 @@ Aturan Bisnis (2.4), pastikan syarat di bawah terpenuhi.
 6. **Variasi role terbukti.** Setiap perbedaan menu, route, data, widget, aksi,
    field, endpoint/guard, atau alur antar-role memiliki Source per role atau
    `TIDAK TERVERIFIKASI`; jangan menyamarkan perbedaan sebagai klaim umum.
+7. **Jenis dokumen konsisten.** Single Menu hanya memiliki target menu yang sama
+   (Split varian role diperbolehkan); Parent Menu/Modul memiliki BAB parent serta
+   Peta Submenu dan metadata `child_menus` yang sinkron dengan seluruh BAB submenu.
 
 Hasil:
 - **Semua lolos** → BAB boleh berstatus **Selesai** (langkah 7).
@@ -454,8 +679,18 @@ Hasil:
 ## Override template
 
 Kalau sebuah proyek butuh struktur BAB berbeda, JANGAN salin seluruh template.
-Buat `docs/tasks/fsd/template.override.md` di repo proyek; skill memakainya bila
-ada, selain itu pakai `./template/fsd-master-template.md` bawaan.
+Override dipilih ketat berdasarkan jenis dokumen agar struktur legacy yang ada
+tidak tanpa sengaja dipakai untuk tipe baru:
+
+| Jenis dokumen | Override proyek (bila ada) | Fallback bawaan |
+|---|---|---|
+| Legacy scope multi-menu | `docs/tasks/fsd/template.override.md` | `./template/fsd-master-template.md` |
+| Single Menu | `docs/tasks/fsd/template.single-menu.override.md` | `./template/fsd-single-menu-template.md` |
+| Parent Menu/Modul | `docs/tasks/fsd/template.parent-module.override.md` | `./template/fsd-parent-module-template.md` |
+
+Override baru tetap wajib mempertahankan metadata YAML identitas dokumen,
+komentar `Source`, blok internal traceability, serta struktur yang dibutuhkan
+self-check untuk jenisnya.
 
 ## Batasan
 
