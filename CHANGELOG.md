@@ -5,7 +5,7 @@ Semua perubahan penting doc-fsd dicatat dalam dokumen ini.
 Format mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 dan project memakai [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-08-09
 
 ### Added
 
